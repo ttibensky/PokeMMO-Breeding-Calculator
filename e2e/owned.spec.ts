@@ -80,6 +80,11 @@ test.describe('Owned Pokémon page', () => {
 
     // Bulbasaur card should appear in the list
     await expect(page.getByText('Bulbasaur')).toBeVisible();
+
+    // The owned-list card sprite renders at the large size token (120px)
+    const cardSprite = page.getByRole('img', { name: 'Bulbasaur' });
+    await expect(cardSprite).toHaveAttribute('width', '120');
+    await expect(cardSprite).toHaveAttribute('height', '120');
   });
 
   // 3. Progressive disclosure: feature-gated fields are NOT shown by default
