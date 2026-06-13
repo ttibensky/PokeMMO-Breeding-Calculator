@@ -77,13 +77,21 @@ npm run test:e2e
 
 ## Deployment
 
-The app deploys automatically to **GitHub Pages** on every push to `main` via `.github/workflows/deploy.yml`.
+The app deploys to **GitHub Pages** manually, gated on a full CI run, via `.github/workflows/deploy.yml`. Deploys are never automatic — you trigger them deliberately with the GitHub CLI:
+
+```bash
+gh workflow run deploy.yml   # start a manual deploy
+gh run watch                 # follow it to completion
+```
+
+The workflow runs the full CI suite (lint + unit + e2e + typecheck) and only builds and publishes `dist/` if every check passes. The first run enables GitHub Pages automatically (via `actions/configure-pages` with `enablement: true`), so no manual repository-settings change is required.
+
+Once deployed, the app is live at <https://ttibensky.github.io/PokeMMO-Breeding-Calculator/>.
 
 A few details worth knowing:
 
 - The Vite config sets `base: '/PokeMMO-Breeding-Calculator/'` to match the repository name, so all asset paths are prefixed correctly.
 - `HashRouter` is used instead of `BrowserRouter`, which means deep links and browser refreshes work on GitHub Pages without needing a custom 404 fallback page.
-- To enable Pages for the first time: go to **Settings → Pages** in the repository and set **Source** to **GitHub Actions**.
 
 ---
 
