@@ -15,12 +15,18 @@ export function isWorktreePath(p) {
   return typeof p === 'string' && p.includes(WORKTREES_SEGMENT);
 }
 
+// Normalize any path that is (or is inside) a worktree back to the main repo root.
+export function projectRootOf(dir) {
+  const i = String(dir).indexOf(WORKTREES_SEGMENT);
+  return i === -1 ? dir : dir.slice(0, i);
+}
+
 // Resolve a CLI arg (bare worktree name OR a path) to an absolute worktree path.
 export function resolveWorktreePath(nameOrPath, projectDir) {
   if (nameOrPath.includes('/')) {
     return isAbsolute(nameOrPath) ? nameOrPath : resolve(projectDir, nameOrPath);
   }
-  return join(projectDir, '.claude', 'worktrees', nameOrPath);
+  return join(projectRootOf(projectDir), '.claude', 'worktrees', nameOrPath);
 }
 
 // Parse newline-separated PID output into a clean array of positive ints.

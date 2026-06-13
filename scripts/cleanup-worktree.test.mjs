@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   isWorktreePath,
   resolveWorktreePath,
+  projectRootOf,
   parsePids,
   collectPids,
   findOrphanWorktrees,
@@ -20,6 +21,18 @@ describe('isWorktreePath', () => {
   });
 });
 
+describe('projectRootOf', () => {
+  it('returns the path unchanged when no worktree segment is present', () => {
+    expect(projectRootOf('/repo')).toBe('/repo');
+  });
+  it('strips the worktree suffix back to the main repo root', () => {
+    expect(projectRootOf('/repo/.claude/worktrees/foo')).toBe('/repo');
+  });
+  it('strips a deep sub-path inside a worktree back to the main repo root', () => {
+    expect(projectRootOf('/repo/.claude/worktrees/foo/sub/dir')).toBe('/repo');
+  });
+});
+
 describe('resolveWorktreePath', () => {
   it('builds the worktree path from a bare name', () => {
     expect(resolveWorktreePath('feature-x', '/repo')).toBe(
@@ -30,6 +43,11 @@ describe('resolveWorktreePath', () => {
     expect(
       resolveWorktreePath('/repo/.claude/worktrees/feature-x', '/repo'),
     ).toBe('/repo/.claude/worktrees/feature-x');
+  });
+  it('resolves correctly when projectDir is itself a worktree path (no doubled segment)', () => {
+    expect(resolveWorktreePath('feature-x', '/repo/.claude/worktrees/foo')).toBe(
+      '/repo/.claude/worktrees/feature-x',
+    );
   });
 });
 
