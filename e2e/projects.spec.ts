@@ -440,7 +440,7 @@ test.describe('Projects feature', () => {
     await expect(nameInput).toHaveValue('My custom build');
   });
 
-  // ── 10. Nature dropdown shows stat changes in option labels ──────────────────
+  // ── 9. Nature dropdown shows stat changes in option labels ───────────────────
   test('nature dropdown options show stat changes (e.g. Adamant +Atk −SpA)', async ({ page }) => {
     await freshStart(page);
 
@@ -460,7 +460,39 @@ test.describe('Projects feature', () => {
     await expect(option).toBeVisible();
   });
 
-  // ── 9. Delete a project ───────────────────────────────────────────────────────
+  // ── 10. Edit a project name from the detail page ─────────────────────────────
+  test('edits a project name from the detail page', async ({ page }) => {
+    await freshStart(page);
+
+    // Create a project to edit
+    await openGoalFormAndFill(page, {
+      trigger: 'emptyState',
+      name: 'Edit Me',
+      species: 'Bulbasaur',
+      stats: ['Target HP', 'Target Atk'],
+    });
+    await page.getByRole('dialog').getByRole('button', { name: 'Create Project' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Open the project detail
+    await page.getByText('Edit Me').click();
+    await expect(page.getByRole('heading', { name: 'Edit Me' })).toBeVisible();
+
+    // Open the edit form from the detail page
+    await page.getByRole('button', { name: 'Edit' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Edit Project' })).toBeVisible();
+
+    // Change the name and save
+    await page.getByLabel('Project name').fill('Edited Name');
+    await page.getByRole('dialog').getByRole('button', { name: 'Save Changes' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Detail page reflects the new name
+    await expect(page.getByRole('heading', { name: 'Edited Name' })).toBeVisible();
+  });
+
+  // ── 11. Delete a project ──────────────────────────────────────────────────────
   test('deletes a project after confirming the window.confirm dialog', async ({ page }) => {
     await freshStart(page);
 
