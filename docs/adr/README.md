@@ -53,3 +53,4 @@ Do **not** write an ADR for trivial, easily-reversible, or purely-local choices 
 | [0010](./0010-editable-default-prices-cost-model.md) | Editable default prices for cost estimation | accepted |
 | [0011](./0011-comprehensive-scope-optional-advanced-features.md) | Comprehensive scope with optional advanced features | accepted |
 | [0012](./0012-testing-strategy-vitest-playwright.md) | Testing strategy: Vitest unit + Playwright e2e | accepted |
+| [0013](./0013-dataset-scope-gen1-5-snapshot.md) | Static dataset scope: National Dex 1–649 (Gen 1–5) snapshot | accepted |
