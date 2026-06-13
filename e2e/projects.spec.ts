@@ -339,7 +339,33 @@ test.describe('Projects feature', () => {
     await expect(page.getByText('No breeding projects yet.')).not.toBeVisible();
   });
 
-  // ── 7. Delete a project ───────────────────────────────────────────────────────
+  // ── 7. Breeding Pool section ─────────────────────────────────────────────────
+  test('Breeding Pool shows coverage gaps and compatible species', async ({ page }) => {
+    await freshStart(page);
+
+    await openGoalFormAndFill(page, {
+      trigger: 'emptyState',
+      name: 'Bulba Pool',
+      species: 'Bulbasaur',
+      stats: ['Target HP', 'Target Atk'],
+    });
+    await page.getByRole('dialog').getByRole('button', { name: 'Create Project' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Open the project detail page.
+    await page.getByText('Bulba Pool').click();
+    await expect(page.getByRole('heading', { name: 'Bulba Pool' })).toBeVisible();
+
+    // Breeding Pool section is present; with no owned Pokémon every attribute is a gap.
+    await expect(page.getByRole('heading', { name: 'Breeding Pool' })).toBeVisible();
+    await expect(page.getByText(/Gap — acquire a male\/Ditto carrier/).first()).toBeVisible();
+
+    // Expand the compatible-species list; Ditto is always a universal option.
+    await page.getByRole('button', { name: /Compatible species/ }).click();
+    await expect(page.getByText('Ditto').first()).toBeVisible();
+  });
+
+  // ── 8. Delete a project ───────────────────────────────────────────────────────
   test('deletes a project after confirming the window.confirm dialog', async ({ page }) => {
     await freshStart(page);
 
