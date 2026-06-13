@@ -339,6 +339,38 @@ test.describe('Projects feature', () => {
     await expect(page.getByText('No breeding projects yet.')).not.toBeVisible();
   });
 
+  // ── 8. Project name pre-fills from species ───────────────────────────────────
+  test('project name pre-fills from species and respects manual edits', async ({ page }) => {
+    await freshStart(page);
+
+    // Open the new-project modal (empty state on a fresh start).
+    await page.getByRole('button', { name: 'Create your first project' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+
+    const nameInput = page.getByLabel('Project name');
+    const speciesInput = page.getByRole('textbox', { name: 'Species' });
+
+    // Field order: species selector renders above the name input.
+    const speciesBox = await speciesInput.boundingBox();
+    const nameBox = await nameInput.boundingBox();
+    expect(speciesBox).not.toBeNull();
+    expect(nameBox).not.toBeNull();
+    expect(speciesBox!.y).toBeLessThan(nameBox!.y);
+
+    // Selecting a species pre-fills the (empty) name.
+    await selectOption(page, 'Species', 'Bulbasaur');
+    await expect(nameInput).toHaveValue('Bulbasaur');
+
+    // Re-selecting a different species regenerates the name (still untouched).
+    await selectOption(page, 'Species', 'Charmander');
+    await expect(nameInput).toHaveValue('Charmander');
+
+    // After a manual edit, changing species leaves the name alone.
+    await nameInput.fill('My custom build');
+    await selectOption(page, 'Species', 'Bulbasaur');
+    await expect(nameInput).toHaveValue('My custom build');
+  });
+
   // ── 7. Delete a project ───────────────────────────────────────────────────────
   test('deletes a project after confirming the window.confirm dialog', async ({ page }) => {
     await freshStart(page);
