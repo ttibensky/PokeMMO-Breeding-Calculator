@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Title, Button, Group } from '@mantine/core';
+import { Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { OwnedPokemonList } from './OwnedPokemonList';
@@ -50,10 +50,7 @@ export function OwnedPage() {
 
   return (
     <>
-      <Group justify="space-between" mb="md">
-        <Title order={1}>Owned Pokémon</Title>
-        <Button onClick={handleAdd}>Add Pokémon</Button>
-      </Group>
+      <Title order={1} mb="md">Owned Pokémon</Title>
 
       <OwnedPokemonList onAdd={handleAdd} onEdit={handleEdit} />
 

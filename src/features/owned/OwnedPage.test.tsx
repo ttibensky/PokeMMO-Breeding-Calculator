@@ -20,14 +20,14 @@ describe('OwnedPage', () => {
     expect(screen.getByRole('heading', { name: /owned pokémon/i })).toBeInTheDocument();
   });
 
-  it('renders an Add Pokémon button', () => {
+  it('does not render a page-level Add Pokémon button (only global header has one)', () => {
     renderWithMantine(<OwnedPage />);
-    expect(screen.getByRole('button', { name: /add pokémon/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^add pokémon$/i })).not.toBeInTheDocument();
   });
 
-  it('clicking Add Pokémon opens the form modal with a Species field', async () => {
+  it('clicking the empty-state button opens the form modal with a Species field', async () => {
     renderWithMantine(<OwnedPage />);
-    const addBtn = screen.getByRole('button', { name: /add pokémon/i });
+    const addBtn = screen.getByRole('button', { name: /add your first pokémon/i });
     fireEvent.click(addBtn);
     await waitFor(() => {
       // Species select should appear in the modal

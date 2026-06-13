@@ -27,7 +27,7 @@ async function openAddOwnedForm(page: Page, via: 'header' | 'emptyState' = 'head
   if (via === 'emptyState') {
     await page.getByRole('button', { name: 'Add your first Pokémon' }).click();
   } else {
-    await page.getByRole('button', { name: 'Add Pokémon' }).first().click();
+    await page.getByTestId('global-add-pokemon').click();
   }
   await expect(page.getByRole('dialog')).toBeVisible();
 }

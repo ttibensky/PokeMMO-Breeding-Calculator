@@ -6,7 +6,7 @@ async function openAddForm(page: import('@playwright/test').Page, via: 'header' 
   if (via === 'emptyState') {
     await page.getByRole('button', { name: 'Add your first Pokémon' }).click();
   } else {
-    await page.getByRole('button', { name: 'Add Pokémon' }).first().click();
+    await page.getByTestId('global-add-pokemon').click();
   }
   await expect(page.getByRole('dialog')).toBeVisible();
 }
@@ -42,6 +42,12 @@ test.describe('Owned Pokémon page', () => {
     await page.goto('./');
     await page.evaluate(() => localStorage.clear());
     await page.goto('./#/owned');
+  });
+
+  // Guard: the page-level Add button is gone; only the global header button remains.
+  test('has no page-level Add button — only the global header Add button', async ({ page }) => {
+    await expect(page.getByTestId('global-add-pokemon')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add Pokémon', exact: true })).toHaveCount(1);
   });
 
   // 1. Empty state on first run
