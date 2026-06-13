@@ -6,3 +6,5 @@ coverage
 .DS_Store
 *.local
 .dataset-cache
+.superpowers/
+.claude/worktrees/
