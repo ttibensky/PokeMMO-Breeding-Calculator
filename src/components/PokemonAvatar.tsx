@@ -2,22 +2,26 @@ import { useState } from 'react';
 import { Box, Text } from '@mantine/core';
 import { getSpeciesById } from '../data/index';
 
+const AVATAR_SIZES = { sm: 56, md: 80, lg: 120 } as const;
+type AvatarSize = keyof typeof AVATAR_SIZES;
+
 interface PokemonAvatarProps {
   speciesId: number;
-  size?: number;
+  size?: AvatarSize;
   showName?: boolean;
 }
 
-export function PokemonAvatar({ speciesId, size = 40, showName = false }: PokemonAvatarProps) {
+export function PokemonAvatar({ speciesId, size = 'md', showName = false }: PokemonAvatarProps) {
   const [imgError, setImgError] = useState(false);
   const species = getSpeciesById(speciesId);
+  const px = AVATAR_SIZES[size];
 
   if (!species) {
     return (
       <Box
         style={{
-          width: size,
-          height: size,
+          width: px,
+          height: px,
           backgroundColor: 'var(--mantine-color-gray-2)',
           borderRadius: 4,
           display: 'inline-block',
@@ -32,8 +36,8 @@ export function PokemonAvatar({ speciesId, size = 40, showName = false }: Pokemo
       {imgError ? (
         <Box
           style={{
-            width: size,
-            height: size,
+            width: px,
+            height: px,
             backgroundColor: 'var(--mantine-color-gray-2)',
             borderRadius: 4,
             flexShrink: 0,
@@ -44,8 +48,8 @@ export function PokemonAvatar({ speciesId, size = 40, showName = false }: Pokemo
         <img
           src={species.spriteUrl}
           alt={species.name}
-          width={size}
-          height={size}
+          width={px}
+          height={px}
           loading="lazy"
           style={{ imageRendering: 'pixelated', flexShrink: 0 }}
           onError={() => setImgError(true)}

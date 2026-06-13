@@ -48,10 +48,24 @@ describe('PokemonAvatar', () => {
     expect(screen.getByLabelText('Bulbasaur')).toBeInTheDocument();
   });
 
-  it('applies the given size to img dimensions', () => {
-    renderWithMantine(<PokemonAvatar speciesId={1} size={64} />);
+  it('resolves the "lg" size token to img dimensions', () => {
+    renderWithMantine(<PokemonAvatar speciesId={1} size="lg" />);
     const img = screen.getByAltText('Bulbasaur') as HTMLImageElement;
-    expect(img.getAttribute('width')).toBe('64');
-    expect(img.getAttribute('height')).toBe('64');
+    expect(img.getAttribute('width')).toBe('120');
+    expect(img.getAttribute('height')).toBe('120');
+  });
+
+  it('resolves the "sm" size token to img dimensions', () => {
+    renderWithMantine(<PokemonAvatar speciesId={1} size="sm" />);
+    const img = screen.getByAltText('Bulbasaur') as HTMLImageElement;
+    expect(img.getAttribute('width')).toBe('56');
+    expect(img.getAttribute('height')).toBe('56');
+  });
+
+  it('defaults to the "md" size token (80px) when no size is given', () => {
+    renderWithMantine(<PokemonAvatar speciesId={1} />);
+    const img = screen.getByAltText('Bulbasaur') as HTMLImageElement;
+    expect(img.getAttribute('width')).toBe('80');
+    expect(img.getAttribute('height')).toBe('80');
   });
 });
