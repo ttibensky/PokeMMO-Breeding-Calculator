@@ -141,6 +141,10 @@ export function goalMet(
   return true;
 }
 
+export function sharesEggGroup(a: PokemonSpecies, b: PokemonSpecies): boolean {
+  return a.eggGroups.some((g) => b.eggGroups.includes(g));
+}
+
 /**
  * Returns true if `mon` can participate in this species' breeding line:
  * it is the target species, OR it is Ditto, OR it shares an egg group with the target species.
@@ -155,7 +159,7 @@ export function isCompatible(
   const monSpecies = getSpecies(mon.speciesId);
   const targetSpecies = getSpecies(goal.speciesId);
   if (!monSpecies || !targetSpecies) return false;
-  return monSpecies.eggGroups.some((g) => targetSpecies.eggGroups.includes(g));
+  return sharesEggGroup(monSpecies, targetSpecies);
 }
 
 /**
