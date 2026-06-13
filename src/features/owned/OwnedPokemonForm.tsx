@@ -15,6 +15,7 @@ import { useForm } from '@mantine/form';
 import { useBreedingStore } from '../../store/index';
 import { getSpeciesById } from '../../data/index';
 import { NATURES } from '../../data/natures';
+import { formatNatureLabel } from '../projects/projectHelpers';
 import { SpeciesSelect } from '../../components/SpeciesSelect';
 import { IVInput } from '../../components/IVInput';
 import {
@@ -214,7 +215,7 @@ export function OwnedPokemonForm({ opened, onClose, editingId, duplicateFromId }
 
           <Select
             label="Nature"
-            data={NATURES.map((n) => ({ value: n, label: n }))}
+            data={NATURES.map((n) => ({ value: n, label: formatNatureLabel(n) }))}
             value={form.values.nature}
             onChange={(val) => val && form.setFieldValue('nature', val)}
             searchable
