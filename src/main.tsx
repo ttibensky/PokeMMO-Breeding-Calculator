@@ -10,7 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <MantineProvider theme={theme} forceColorScheme="light" defaultColorScheme="light">
+    <MantineProvider theme={theme} defaultColorScheme="auto">
       <Notifications />
       <ErrorBoundary>
         <AppRouter />

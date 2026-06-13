@@ -216,7 +216,27 @@ test.describe('Settings page', () => {
     await expect(switchInput(page, 'Shiny')).toBeChecked();
   });
 
-  // ── 4. Reset to defaults restores original values ──────────────────────────
+  // ── 4. Color scheme (dark mode) can be set and persists ─────────────────────
+  test('color scheme can be set to dark and persists across reload', async ({ page }) => {
+    await freshStart(page, './#/settings');
+
+    // Select the Dark color scheme in the Appearance segmented control
+    await page.getByText('Dark', { exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-mantine-color-scheme',
+      'dark'
+    );
+
+    // Reload — the preference should persist
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-mantine-color-scheme',
+      'dark'
+    );
+  });
+
+  // ── 5. Reset to defaults restores original values ──────────────────────────
   test('Reset to defaults restores prices and feature toggles to their defaults', async ({ page }) => {
     await freshStart(page, './#/settings');
 
