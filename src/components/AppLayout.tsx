@@ -28,6 +28,7 @@ export function AppLayout() {
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group wrap="nowrap">
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Toggle navigation" />
+            <img src={`${import.meta.env.BASE_URL}mewtwo-sprite.gif`} alt="Mewtwo" height={32} />
             <Title order={3}>PokeMMO Breeding Calculator</Title>
           </Group>
           <Button size="sm" data-testid="global-add-pokemon" onClick={handleGlobalAdd}>
