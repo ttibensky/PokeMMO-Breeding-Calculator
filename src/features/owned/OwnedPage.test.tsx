@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
+import { MemoryRouter } from 'react-router-dom';
 import { OwnedPage } from './OwnedPage';
 import { resetStore } from '../../store/index';
 
 function renderWithMantine(ui: React.ReactElement) {
-  return render(<MantineProvider>{ui}</MantineProvider>);
+  return render(<MemoryRouter><MantineProvider>{ui}</MantineProvider></MemoryRouter>);
 }
 
 beforeEach(() => {
