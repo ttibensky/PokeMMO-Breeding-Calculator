@@ -1,5 +1,6 @@
 import type { StatKey } from '../../data/types';
 import type { BreedingGoal, BreedingProject, ItemKey, ProjectStatus } from '../../store/types';
+import { NATURE_EFFECT } from '../../data/natures';
 
 export const STAT_LABELS: Record<StatKey, string> = {
   hp:  'HP',
@@ -9,6 +10,14 @@ export const STAT_LABELS: Record<StatKey, string> = {
   spd: 'SpD',
   spe: 'Spe',
 };
+
+export function formatNatureLabel(nature: string): string {
+  const effect = NATURE_EFFECT[nature];
+  if (!effect || effect.up === null || effect.down === null) {
+    return `${nature} neutral`;
+  }
+  return `${nature} +${STAT_LABELS[effect.up]} −${STAT_LABELS[effect.down]}`;
+}
 
 export const STATUS_COLOR: Record<ProjectStatus, string> = {
   planning:    'gray',

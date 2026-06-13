@@ -6,6 +6,7 @@ import {
   breedsDone,
   progressPercent,
   formatMoney,
+  formatNatureLabel,
   STAT_LABELS,
   STATUS_COLOR,
   ITEM_LABELS,
@@ -295,5 +296,21 @@ describe('formatMoney', () => {
 
   it('formats 1000000 as "$1,000,000"', () => {
     expect(formatMoney(1000000)).toBe('$1,000,000');
+  });
+});
+
+// ── formatNatureLabel ──────────────────────────────────────────────────────────
+
+describe('formatNatureLabel', () => {
+  it('formats an effect nature as "Name +Up −Down"', () => {
+    expect(formatNatureLabel('Adamant')).toBe('Adamant +Atk −SpA');
+  });
+
+  it('formats another effect nature correctly', () => {
+    expect(formatNatureLabel('Modest')).toBe('Modest +SpA −Atk');
+  });
+
+  it('formats a neutral nature as "Name neutral"', () => {
+    expect(formatNatureLabel('Hardy')).toBe('Hardy neutral');
   });
 });
