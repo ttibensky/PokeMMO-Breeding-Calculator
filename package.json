@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "lint": "eslint .",
     "typecheck": "tsc -b",
-    "build:dataset": "tsx scripts/build-dataset.ts"
+    "build:dataset": "tsx scripts/build-dataset.ts",
+    "cleanup:worktree": "node scripts/cleanup-worktree.mjs"
   },
   "dependencies": {
     "@mantine/core": "^7.17.8",
