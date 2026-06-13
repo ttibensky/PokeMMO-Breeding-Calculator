@@ -1,6 +1,6 @@
-import { AppShell, Burger, Group, NavLink, Title } from '@mantine/core';
+import { AppShell, Burger, Group, NavLink, Title, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { NavLink as RouterNavLink, Outlet } from 'react-router-dom';
+import { NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navItems = [
   { label: 'Owned', to: '/owned' },
@@ -10,6 +10,13 @@ const navItems = [
 
 export function AppLayout() {
   const [opened, { toggle }] = useDisclosure();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  function handleGlobalAdd() {
+    const returnTo = location.pathname + location.search;
+    navigate(`/owned?add=1&returnTo=${encodeURIComponent(returnTo)}`);
+  }
 
   return (
     <AppShell
@@ -18,9 +25,14 @@ export function AppLayout() {
       padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md">
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Toggle navigation" />
-          <Title order={3}>PokeMMO Breeding Calculator</Title>
+        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+          <Group wrap="nowrap">
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Toggle navigation" />
+            <Title order={3}>PokeMMO Breeding Calculator</Title>
+          </Group>
+          <Button size="sm" data-testid="global-add-pokemon" onClick={handleGlobalAdd}>
+            Add Pokémon
+          </Button>
         </Group>
       </AppShell.Header>
 
