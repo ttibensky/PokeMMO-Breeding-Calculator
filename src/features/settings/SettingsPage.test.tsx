@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import { SettingsPage } from './SettingsPage';
 import { useBreedingStore, resetStore, DEFAULT_SETTINGS } from '../../store';
+import { buildExportBundle, serializeExport } from '../../store/io';
+import type { OwnedPokemon } from '../../store/types';
 
 function renderPage() {
   return render(
@@ -347,6 +349,154 @@ describe('SettingsPage — reset to defaults', () => {
 
     expect(confirmSpy).toHaveBeenCalledOnce();
     expect(confirmSpy.mock.calls[0][0]).toContain('Reset');
+
+    vi.restoreAllMocks();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DATA SECTION — export / import UI
+// ---------------------------------------------------------------------------
+
+function makeTestMon(overrides: Partial<OwnedPokemon> = {}): OwnedPokemon {
+  return {
+    id: 'settings-test-mon',
+    speciesId: 25,
+    ivs: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
+    nature: 'Timid',
+    ability: 'Static',
+    isHiddenAbility: false,
+    gender: 'female',
+    isShiny: false,
+    isAlpha: false,
+    eggMoves: [],
+    createdAt: '2026-06-13T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function makeExportJson(mon?: OwnedPokemon): string {
+  const bundle = buildExportBundle(
+    {
+      ownedPokemon: mon ? [mon] : [],
+      projects: [],
+      settings: DEFAULT_SETTINGS,
+    },
+    '2026-06-13T00:00:00.000Z',
+  );
+  return serializeExport(bundle);
+}
+
+describe('SettingsPage — Data section render', () => {
+  it('renders the "Export data" button', () => {
+    renderPage();
+    expect(screen.getByRole('button', { name: /export data/i })).toBeInTheDocument();
+  });
+
+  it('renders the file input for import', () => {
+    renderPage();
+    expect(screen.getByLabelText(/import data from json file/i)).toBeInTheDocument();
+  });
+
+  it('renders the Data section heading', () => {
+    renderPage();
+    expect(screen.getByText('Data (export / import)')).toBeInTheDocument();
+  });
+});
+
+describe('SettingsPage — import flow: valid JSON', () => {
+  it('shows success Alert and updates the store after importing a valid file', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const mon = makeTestMon();
+    const json = makeExportJson(mon);
+
+    // Create a File and polyfill .text() since jsdom may not implement it
+    const file = new File([json], 'backup.json', { type: 'application/json' });
+    file.text = () => Promise.resolve(json);
+
+    renderPage();
+
+    const input = screen.getByLabelText(/import data from json file/i);
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/import successful/i)).toBeInTheDocument();
+    });
+
+    expect(useBreedingStore.getState().ownedPokemon).toEqual([mon]);
+
+    vi.restoreAllMocks();
+  });
+
+  it('shows imported count in the success message', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const mon = makeTestMon();
+    const json = makeExportJson(mon);
+    const file = new File([json], 'backup.json', { type: 'application/json' });
+    file.text = () => Promise.resolve(json);
+
+    renderPage();
+
+    const input = screen.getByLabelText(/import data from json file/i);
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/imported 1 pokémon and 0 projects/i)).toBeInTheDocument();
+    });
+
+    vi.restoreAllMocks();
+  });
+});
+
+describe('SettingsPage — import flow: invalid JSON', () => {
+  it('shows error Alert for invalid JSON without updating the store', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const badJson = 'this is not valid json{{{';
+    const file = new File([badJson], 'bad.json', { type: 'application/json' });
+    file.text = () => Promise.resolve(badJson);
+
+    renderPage();
+
+    const input = screen.getByLabelText(/import data from json file/i);
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/import failed/i)).toBeInTheDocument();
+    });
+
+    // Store should remain unchanged (empty)
+    expect(useBreedingStore.getState().ownedPokemon).toEqual([]);
+
+    vi.restoreAllMocks();
+  });
+});
+
+describe('SettingsPage — import flow: confirm=false', () => {
+  it('aborts import and leaves store unchanged when user cancels confirm', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    const mon = makeTestMon();
+    const json = makeExportJson(mon);
+    const file = new File([json], 'backup.json', { type: 'application/json' });
+    file.text = () => Promise.resolve(json);
+
+    renderPage();
+
+    const input = screen.getByLabelText(/import data from json file/i);
+    fireEvent.change(input, { target: { files: [file] } });
+
+    // Give async operations a chance to run (they shouldn't since confirm=false bails early)
+    await new Promise((r) => setTimeout(r, 50));
+
+    // No success or error alert
+    expect(screen.queryByText(/import successful/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/import failed/i)).not.toBeInTheDocument();
+
+    // Store unchanged
+    expect(useBreedingStore.getState().ownedPokemon).toEqual([]);
 
     vi.restoreAllMocks();
   });

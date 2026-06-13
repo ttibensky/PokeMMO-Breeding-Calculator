@@ -9,9 +9,11 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { useRef, useState } from 'react';
 import { useBreedingStore } from '../../store';
 import { ITEM_LABELS } from '../projects/projectHelpers';
 import type { PriceKey } from '../../store/types';
+import { buildExportBundle, serializeExport, parseImport, applyImport } from '../../store/io';
 
 const POWER_ITEM_KEYS: PriceKey[] = [
   'powerWeight',
@@ -43,6 +45,11 @@ export function SettingsPage() {
   const updateFeatures = useBreedingStore((s) => s.updateFeatures);
   const updateMechanics = useBreedingStore((s) => s.updateMechanics);
   const resetSettings = useBreedingStore((s) => s.resetSettings);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importStatus, setImportStatus] = useState<
+    { type: 'success'; ownedCount: number; projectsCount: number } | { type: 'error'; message: string } | null
+  >(null);
 
   function handlePriceChange(key: PriceKey, val: string | number) {
     const n = typeof val === 'number' ? val : parseFloat(String(val));
@@ -79,6 +86,51 @@ export function SettingsPage() {
     if (window.confirm('Reset all settings to defaults?')) {
       resetSettings();
     }
+  }
+
+  function handleExport() {
+    const state = useBreedingStore.getState();
+    const bundle = buildExportBundle(
+      { ownedPokemon: state.ownedPokemon, projects: state.projects, settings: state.settings },
+      new Date().toISOString(),
+    );
+    const json = serializeExport(bundle);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pokemmo-breeding-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!window.confirm('This replaces your current data. Continue?')) {
+      // Reset file input so the same file can be selected again later.
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    file.text().then((text) => {
+      const result = parseImport(text);
+      if (result.ok) {
+        applyImport(result.data);
+        setImportStatus({
+          type: 'success',
+          ownedCount: result.data.ownedPokemon.length,
+          projectsCount: result.data.projects.length,
+        });
+      } else {
+        setImportStatus({ type: 'error', message: result.error });
+      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }).catch(() => {
+      setImportStatus({ type: 'error', message: 'Failed to read the file.' });
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    });
   }
 
   return (
@@ -304,6 +356,49 @@ export function SettingsPage() {
               })
             }
           />
+        </Stack>
+      </Card>
+
+      {/* Data export / import */}
+      <Card withBorder radius="md" p="lg">
+        <Stack gap="md">
+          <Title order={3}>Data (export / import)</Title>
+          <Text c="dimmed" size="sm">
+            Back up or restore all your Pokémon and projects as a JSON file.
+          </Text>
+
+          <Group align="flex-start">
+            <Button variant="outline" onClick={handleExport}>
+              Export data
+            </Button>
+
+            <div>
+              <label htmlFor="import-file-input">
+                <Text size="sm" fw={500} mb={4}>
+                  Import data
+                </Text>
+              </label>
+              <input
+                id="import-file-input"
+                ref={fileInputRef}
+                type="file"
+                accept="application/json"
+                onChange={handleImportFile}
+                aria-label="Import data from JSON file"
+              />
+            </div>
+          </Group>
+
+          {importStatus?.type === 'success' && (
+            <Alert color="green" variant="light" title="Import successful">
+              Imported {importStatus.ownedCount} Pokémon and {importStatus.projectsCount} projects.
+            </Alert>
+          )}
+          {importStatus?.type === 'error' && (
+            <Alert color="red" variant="light" title="Import failed">
+              {importStatus.message}
+            </Alert>
+          )}
         </Stack>
       </Card>
 
