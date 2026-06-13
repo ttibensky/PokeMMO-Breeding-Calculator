@@ -19,7 +19,7 @@ import { NATURES } from '../../data/natures';
 import { SpeciesSelect } from '../../components/SpeciesSelect';
 import { allowedGenders, normalAbilities } from '../owned/ownedHelpers';
 import { estimateGoal } from '../../engine/index';
-import { goalSummary } from './projectHelpers';
+import { goalSummary, formatNatureLabel } from './projectHelpers';
 import type { StatKey, Gender } from '../../store/types';
 import type { BreedingGoal } from '../../store/types';
 
@@ -271,7 +271,7 @@ export function GoalForm({ opened, onClose, editingId }: GoalFormProps) {
           <Select
             label="Nature (optional)"
             placeholder="Any nature"
-            data={NATURES.map((n) => ({ value: n, label: n }))}
+            data={NATURES.map((n) => ({ value: n, label: formatNatureLabel(n) }))}
             value={form.values.nature}
             onChange={(val) => form.setFieldValue('nature', val)}
             searchable
