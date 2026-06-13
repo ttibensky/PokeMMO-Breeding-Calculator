@@ -5,7 +5,7 @@ import { getSpeciesById } from '../data/index';
 const AVATAR_SIZES = { sm: 56, md: 80, lg: 120 } as const;
 type AvatarSize = keyof typeof AVATAR_SIZES;
 
-const SPRITE_ZOOM = 1.4; // crops ~15% of transparent margin per edge
+const SPRITE_ZOOM = 1.25; // crops ~10% of transparent margin per edge
 
 interface PokemonAvatarProps {
   speciesId: number;

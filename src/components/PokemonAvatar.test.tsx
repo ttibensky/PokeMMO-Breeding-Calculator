@@ -73,7 +73,7 @@ describe('PokemonAvatar', () => {
     renderWithMantine(<PokemonAvatar speciesId={1} size="lg" />);
     const img = screen.getByAltText('Bulbasaur') as HTMLImageElement;
     // Zoom is applied as a CSS transform on the img (attributes stay at the token px).
-    expect(img.style.transform).toBe('scale(1.4)');
+    expect(img.style.transform).toBe('scale(1.25)');
     // The img is wrapped in a fixed-size frame that clips the overflowing margins.
     expect(img.parentElement?.style.overflow).toBe('hidden');
   });
