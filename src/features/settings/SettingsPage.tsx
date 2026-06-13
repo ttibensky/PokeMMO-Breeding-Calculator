@@ -4,10 +4,13 @@ import {
   Card,
   Group,
   NumberInput,
+  SegmentedControl,
   Stack,
   Switch,
   Text,
   Title,
+  useMantineColorScheme,
+  type MantineColorScheme,
 } from '@mantine/core';
 import { useRef, useState } from 'react';
 import { useBreedingStore } from '../../store';
@@ -40,6 +43,7 @@ function getPriceLabel(key: PriceKey): string {
 }
 
 export function SettingsPage() {
+  const { colorScheme, setColorScheme } = useMantineColorScheme();
   const settings = useBreedingStore((s) => s.settings);
   const updatePrices = useBreedingStore((s) => s.updatePrices);
   const updateFeatures = useBreedingStore((s) => s.updateFeatures);
@@ -399,6 +403,26 @@ export function SettingsPage() {
               {importStatus.message}
             </Alert>
           )}
+        </Stack>
+      </Card>
+
+      {/* Appearance */}
+      <Card withBorder radius="md" p="lg">
+        <Stack gap="md">
+          <Title order={3}>Appearance</Title>
+          <Text c="dimmed" size="sm">
+            Choose the color scheme. "Auto" follows your system preference.
+          </Text>
+          <SegmentedControl
+            aria-label="Color scheme"
+            value={colorScheme}
+            onChange={(value) => setColorScheme(value as MantineColorScheme)}
+            data={[
+              { label: 'Light', value: 'light' },
+              { label: 'Dark', value: 'dark' },
+              { label: 'Auto', value: 'auto' },
+            ]}
+          />
         </Stack>
       </Card>
 
