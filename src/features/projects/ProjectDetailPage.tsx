@@ -45,6 +45,7 @@ import {
   formatNatureLabel,
 } from './projectHelpers';
 import { BreedingPoolSection } from './BreedingPoolSection';
+import { GoalForm } from './GoalForm';
 import type { Gender, IVs, StatKey, ItemKey } from '../../store/types';
 import type { PairCandidate } from '../../engine/index';
 
@@ -477,6 +478,7 @@ export function ProjectDetailPage() {
 
   // Modal state
   const [modalState, setModalState] = useState<ReportModalState>(CLOSED_MODAL);
+  const [editOpened, setEditOpened] = useState(false);
 
   // Compute plan reactively
   const plan = useMemo(
@@ -551,6 +553,9 @@ export function ProjectDetailPage() {
       </Group>
 
       <Group gap="xs" mb="md">
+        <Button size="xs" variant="light" onClick={() => setEditOpened(true)}>
+          Edit
+        </Button>
         {project.status !== 'done' && (
           <Button size="xs" color="green" variant="light" onClick={() => setProjectStatus(project.id, 'done')}>
             Mark Done
@@ -885,6 +890,12 @@ export function ProjectDetailPage() {
           )}
         </Card>
       </Stack>
+
+      <GoalForm
+        opened={editOpened}
+        onClose={() => setEditOpened(false)}
+        editingId={project.id}
+      />
 
       {/* ── 7. Report-result modal ── */}
       <ReportResultModal
