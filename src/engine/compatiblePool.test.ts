@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { getCompatibleSpecies } from './compatiblePool';
+import { getCompatibleSpecies, computeCoverage } from './compatiblePool';
 import type { PokemonSpecies } from '../data/types';
-import { computeCoverage } from './compatiblePool';
 import type { OwnedPokemon, BreedingGoal } from '../store/types';
 
 function makeSpecies(overrides?: Partial<PokemonSpecies>): PokemonSpecies {
@@ -113,5 +112,15 @@ describe('computeCoverage', () => {
   it('omits the nature entry when the goal sets no nature', () => {
     const result = computeCoverage({ speciesId: 1, targetIVs: { hp: 31 } }, [], getSpecies);
     expect(result.map((c) => c.attribute)).toEqual([{ kind: 'iv', stat: 'hp' }]);
+  });
+
+  it('does not count a genderless non-Ditto different-species carrier', () => {
+    // speciesId 4 (Charmander) shares 'monster' with Bulbasaur, but gender is genderless,
+    // so canContribute returns false and it must not appear as a carrier.
+    const genderlessMon = makeMon({ id: 'gl', speciesId: 4, gender: 'genderless', ivs: { hp: 31, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 } });
+    const result = computeCoverage(GOAL, [genderlessMon], getSpecies);
+    const hp = result.find((c) => c.attribute.kind === 'iv' && c.attribute.stat === 'hp')!;
+    expect(hp.carriers).toEqual([]);
+    expect(hp.isGap).toBe(true);
   });
 });

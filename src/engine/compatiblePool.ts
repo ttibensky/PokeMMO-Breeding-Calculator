@@ -1,7 +1,7 @@
 import type { PokemonSpecies } from '../data/types';
 import { DITTO_ID } from '../data/index';
-import { sharesEggGroup, isCompatible, carriesAttribute } from './planner';
-import type { OwnedPokemon, BreedingGoal, StatKey } from '../store/types';
+import { sharesEggGroup, isCompatible, carriesAttribute, targetAttributes } from './planner';
+import type { OwnedPokemon, BreedingGoal } from '../store/types';
 import type { Attribute } from './types';
 
 /**
@@ -34,21 +34,10 @@ export function getCompatibleSpecies(
   return ditto ? [ditto, ...pool] : pool;
 }
 
-const STAT_ORDER: StatKey[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
-
 export interface AttributeCoverage {
   attribute: Attribute;
   carriers: OwnedPokemon[];
   isGap: boolean;
-}
-
-function goalAttributes(goal: BreedingGoal): Attribute[] {
-  const attrs: Attribute[] = [];
-  for (const stat of STAT_ORDER) {
-    if (goal.targetIVs[stat] === 31) attrs.push({ kind: 'iv', stat });
-  }
-  if (goal.nature) attrs.push({ kind: 'nature', nature: goal.nature });
-  return attrs;
 }
 
 /** A mon can feed the target line if it's the same species, a Ditto, or a different-species male. */
@@ -63,7 +52,7 @@ export function computeCoverage(
   owned: OwnedPokemon[],
   getSpecies: (id: number) => PokemonSpecies | undefined,
 ): AttributeCoverage[] {
-  return goalAttributes(goal).map((attribute) => {
+  return targetAttributes(goal).map((attribute) => {
     const carriers = owned.filter(
       (mon) =>
         isCompatible(mon, goal, getSpecies) &&
