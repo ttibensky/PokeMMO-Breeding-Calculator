@@ -121,3 +121,34 @@ A few details worth knowing:
 - **[docs/adr/](./docs/adr/)** — Architecture Decision Records explaining key design choices.
 
 > **Note on mechanics constants:** PokeMMO breeding mechanics are distinct from mainline games. Some constants (e.g. breed costs, IV inheritance rates) are flagged `[verify in-game]` in `docs/breeding-mechanics.md` and can be adjusted in the app's **Settings** page if the game updates.
+
+---
+
+## Worktree cleanup
+
+Each Claude Code worktree (`.claude/worktrees/<name>`) runs its own node
+processes — a Vite dev server, a preview server, `vitest` workers, and the
+`esbuild` service — on a port pair derived from the worktree name. These are
+terminated automatically when the worktree goes away, and can be cleaned up by
+hand.
+
+**Automatic triggers:**
+
+- **Worktree removed** — a `WorktreeRemove` hook (`.claude/settings.json`) runs
+  `scripts/cleanup-worktree.mjs` and kills that worktree's processes.
+- **Merged / PR created** — the finishing flow runs the cleanup explicitly (see
+  `.claude/rules/worktree-cleanup.md`), covering the case where the worktree
+  directory is kept on disk after merging.
+
+**Manual triggers:**
+
+```bash
+# Clean one worktree by its directory name (or path):
+npm run cleanup:worktree -- <worktree-name>
+
+# Sweep every worktree directory git no longer tracks (orphan cleanup):
+npm run cleanup:worktree
+```
+
+The script only ever touches processes under `.claude/worktrees/` — it refuses
+to run against the main checkout, so your primary dev server is never affected.
