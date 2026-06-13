@@ -91,6 +91,10 @@ test.describe('Owned Pokémon page', () => {
     const cardSprite = page.getByRole('img', { name: 'Bulbasaur' });
     await expect(cardSprite).toHaveAttribute('width', '120');
     await expect(cardSprite).toHaveAttribute('height', '120');
+    // The sprite is zoomed/cropped via a CSS transform (matrix, not identity)
+    const transform = await cardSprite.evaluate((el) => getComputedStyle(el).transform);
+    expect(transform).not.toBe('none');
+    expect(transform).toContain('matrix');
   });
 
   // 3. Progressive disclosure: feature-gated fields are NOT shown by default
