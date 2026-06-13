@@ -17,7 +17,7 @@ Object.defineProperty(window, 'matchMedia', {
 
 // jsdom does not implement ResizeObserver; Mantine's ScrollArea (used inside Select
 // dropdowns and Modals) requires it.
-global.ResizeObserver = class ResizeObserver {
+globalThis.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
