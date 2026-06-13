@@ -201,10 +201,10 @@ describe('OwnedPokemonForm', () => {
 
       renderForm({ opened: true, editingId: id });
 
-      // Nature select should show 'Jolly'
+      // Nature select should show 'Jolly +Spe −SpA' (name + stat deltas)
       await waitFor(() => {
         const natureInput = screen.getByRole('textbox', { name: 'Nature' }) as HTMLInputElement;
-        expect(natureInput.value).toBe('Jolly');
+        expect(natureInput.value).toBe('Jolly +Spe −SpA');
       });
     });
 
