@@ -25,9 +25,10 @@ const GENDER_SYMBOL: Record<string, string> = {
 interface OwnedPokemonListProps {
   onAdd: () => void;
   onEdit: (id: string) => void;
+  onDuplicate: (id: string) => void;
 }
 
-export function OwnedPokemonList({ onAdd, onEdit }: OwnedPokemonListProps) {
+export function OwnedPokemonList({ onAdd, onEdit, onDuplicate }: OwnedPokemonListProps) {
   const ownedPokemon = useBreedingStore((s) => s.ownedPokemon);
   const removeOwnedPokemon = useBreedingStore((s) => s.removeOwnedPokemon);
   const features = useBreedingStore((s) => s.settings.features);
@@ -143,6 +144,13 @@ export function OwnedPokemonList({ onAdd, onEdit }: OwnedPokemonListProps) {
                       onClick={() => onEdit(mon.id)}
                     >
                       ✏️
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
+                      aria-label={`Duplicate ${name}`}
+                      onClick={() => onDuplicate(mon.id)}
+                    >
+                      ⧉
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"

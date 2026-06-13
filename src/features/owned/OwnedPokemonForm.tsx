@@ -42,6 +42,7 @@ interface OwnedPokemonFormProps {
   opened: boolean;
   onClose: (didSubmit?: boolean) => void;
   editingId?: string;
+  duplicateFromId?: string;
 }
 
 const GENDER_LABELS: Record<Gender, string> = {
@@ -74,7 +75,7 @@ function buildInitialValues(): FormValues {
   };
 }
 
-export function OwnedPokemonForm({ opened, onClose, editingId }: OwnedPokemonFormProps) {
+export function OwnedPokemonForm({ opened, onClose, editingId, duplicateFromId }: OwnedPokemonFormProps) {
   const addOwnedPokemon = useBreedingStore((s) => s.addOwnedPokemon);
   const updateOwnedPokemon = useBreedingStore((s) => s.updateOwnedPokemon);
   const getOwnedById = useBreedingStore((s) => s.getOwnedById);
@@ -90,8 +91,9 @@ export function OwnedPokemonForm({ opened, onClose, editingId }: OwnedPokemonFor
   // Pre-fill when editing
   useEffect(() => {
     if (!opened) return;
-    if (editingId) {
-      const existing = getOwnedById(editingId);
+    const sourceId = editingId ?? duplicateFromId;
+    if (sourceId) {
+      const existing = getOwnedById(sourceId);
       if (existing) {
         form.setValues({
           speciesId: existing.speciesId,
@@ -110,7 +112,7 @@ export function OwnedPokemonForm({ opened, onClose, editingId }: OwnedPokemonFor
     }
     form.setValues(buildInitialValues());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opened, editingId]);
+  }, [opened, editingId, duplicateFromId]);
 
   const species = form.values.speciesId !== null ? getSpeciesById(form.values.speciesId) : undefined;
 
@@ -185,7 +187,7 @@ export function OwnedPokemonForm({ opened, onClose, editingId }: OwnedPokemonFor
     <Modal
       opened={opened}
       onClose={onClose}
-      title={editingId ? 'Edit Pokémon' : 'Add Pokémon'}
+      title={editingId ? 'Edit Pokémon' : duplicateFromId ? 'Duplicate Pokémon' : 'Add Pokémon'}
       size="lg"
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
