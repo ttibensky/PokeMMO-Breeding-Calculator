@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   Button,
@@ -84,9 +84,12 @@ export function GoalForm({ opened, onClose, editingId }: GoalFormProps) {
     },
   });
 
+  const [nameManuallyEdited, setNameManuallyEdited] = useState(false);
+
   // Pre-fill when editing
   useEffect(() => {
     if (!opened) return;
+    setNameManuallyEdited(false);
     if (editingId) {
       const existing = getProjectById(editingId);
       if (existing) {
@@ -139,8 +142,10 @@ export function GoalForm({ opened, onClose, editingId }: GoalFormProps) {
       gender: null,
       eggMoves: [],
       requireHiddenAbility: false,
+      name: nameManuallyEdited
+        ? form.values.name
+        : (newSpecies?.name ?? form.values.name),
     });
-    void newSpecies;
   }
 
   function toggleStat(stat: StatKey) {
@@ -221,19 +226,23 @@ export function GoalForm({ opened, onClose, editingId }: GoalFormProps) {
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="sm">
-          <TextInput
-            label="Project name"
-            required
-            placeholder="e.g. Garchomp attacker"
-            {...form.getInputProps('name')}
-          />
-
           <SpeciesSelect
             value={form.values.speciesId}
             onChange={handleSpeciesChange}
             label="Target species"
             required
             error={form.errors.speciesId as string | undefined}
+          />
+
+          <TextInput
+            label="Project name"
+            required
+            placeholder="e.g. Garchomp attacker"
+            {...form.getInputProps('name')}
+            onChange={(event) => {
+              setNameManuallyEdited(true);
+              form.setFieldValue('name', event.currentTarget.value);
+            }}
           />
 
           {/* Target stats — checkboxes */}

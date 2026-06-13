@@ -138,6 +138,49 @@ test.describe('Projects feature', () => {
     await expect(page.getByText(/2×31/).first()).toBeVisible();
   });
 
+  // ── Whole-card navigation ────────────────────────────────────────────────────
+  test('clicking anywhere on the card (not just the title) opens the project detail', async ({ page }) => {
+    await freshStart(page);
+
+    await openGoalFormAndFill(page, {
+      trigger: 'emptyState',
+      name: 'Click Anywhere',
+      species: 'Bulbasaur',
+      stats: ['Target HP', 'Target Atk'],
+    });
+    await page.getByRole('dialog').getByRole('button', { name: 'Create Project' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Click the card body. The click lands at the card's center (the badge/cost row),
+    // away from the title and the edit/delete icons — proving the whole box is clickable.
+    await page.getByTestId('project-card').click();
+
+    // Navigated to the detail view (#/projects/<id>)
+    await expect(page.getByRole('heading', { name: 'Click Anywhere' })).toBeVisible();
+    await expect(page).toHaveURL(/#\/projects\/.+/);
+  });
+
+  // ── Edit icon does not navigate ──────────────────────────────────────────────
+  test('clicking the edit icon opens the edit modal without navigating to the detail', async ({ page }) => {
+    await freshStart(page);
+
+    await openGoalFormAndFill(page, {
+      trigger: 'emptyState',
+      name: 'Edit No Nav',
+      species: 'Bulbasaur',
+      stats: ['Target HP', 'Target Atk'],
+    });
+    await page.getByRole('dialog').getByRole('button', { name: 'Create Project' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Click the edit icon — opens the GoalForm modal, must NOT navigate.
+    await page.getByRole('button', { name: 'Edit Edit No Nav' }).click();
+
+    await expect(page.getByRole('dialog')).toBeVisible();
+    // Still on the list URL (#/projects), not the detail view (#/projects/<id>).
+    await expect(page).toHaveURL(/#\/projects$/);
+  });
+
   // ── 2. IV-count validation ───────────────────────────────────────────────────
   test('shows validation error when fewer than 2 stats are selected', async ({ page }) => {
     await freshStart(page);
@@ -365,7 +408,39 @@ test.describe('Projects feature', () => {
     await expect(page.getByText('Ditto').first()).toBeVisible();
   });
 
-  // ── 8. Delete a project ───────────────────────────────────────────────────────
+  // ── 8. Project name pre-fills from species ───────────────────────────────────
+  test('project name pre-fills from species and respects manual edits', async ({ page }) => {
+    await freshStart(page);
+
+    // Open the new-project modal (empty state on a fresh start).
+    await page.getByRole('button', { name: 'Create your first project' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+
+    const nameInput = page.getByLabel('Project name');
+    const speciesInput = page.getByRole('textbox', { name: 'Species' });
+
+    // Field order: species selector renders above the name input.
+    const speciesBox = await speciesInput.boundingBox();
+    const nameBox = await nameInput.boundingBox();
+    expect(speciesBox).not.toBeNull();
+    expect(nameBox).not.toBeNull();
+    expect(speciesBox!.y).toBeLessThan(nameBox!.y);
+
+    // Selecting a species pre-fills the (empty) name.
+    await selectOption(page, 'Species', 'Bulbasaur');
+    await expect(nameInput).toHaveValue('Bulbasaur');
+
+    // Re-selecting a different species regenerates the name (still untouched).
+    await selectOption(page, 'Species', 'Charmander');
+    await expect(nameInput).toHaveValue('Charmander');
+
+    // After a manual edit, changing species leaves the name alone.
+    await nameInput.fill('My custom build');
+    await selectOption(page, 'Species', 'Bulbasaur');
+    await expect(nameInput).toHaveValue('My custom build');
+  });
+
+  // ── 9. Delete a project ───────────────────────────────────────────────────────
   test('deletes a project after confirming the window.confirm dialog', async ({ page }) => {
     await freshStart(page);
 
@@ -388,5 +463,8 @@ test.describe('Projects feature', () => {
     // Project removed — back to empty state
     await expect(page.getByText('No breeding projects yet.')).toBeVisible();
     await expect(page.getByText('Delete Me')).not.toBeVisible();
+
+    // Delete acted in place — never navigated to a detail view.
+    await expect(page).toHaveURL(/#\/projects$/);
   });
 });
