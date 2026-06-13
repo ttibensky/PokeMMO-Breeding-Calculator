@@ -43,6 +43,7 @@ import {
   formatMoney,
   ITEM_LABELS,
 } from './projectHelpers';
+import { BreedingPoolSection } from './BreedingPoolSection';
 import type { Gender, IVs, StatKey, ItemKey } from '../../store/types';
 import type { PairCandidate } from '../../engine/index';
 
@@ -745,6 +746,8 @@ export function ProjectDetailPage() {
             )}
           </Card>
         )}
+
+        <BreedingPoolSection goal={project.goal} ownedPokemon={ownedPokemon} />
 
         {/* ── 4. Estimate & cost card ── */}
         <Card withBorder radius="md" padding="md">
