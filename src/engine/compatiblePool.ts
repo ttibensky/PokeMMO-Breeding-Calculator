@@ -1,6 +1,8 @@
 import type { PokemonSpecies } from '../data/types';
 import { DITTO_ID } from '../data/index';
-import { sharesEggGroup } from './planner';
+import { sharesEggGroup, isCompatible, carriesAttribute } from './planner';
+import type { OwnedPokemon, BreedingGoal, StatKey } from '../store/types';
+import type { Attribute } from './types';
 
 /**
  * Species that can contribute attributes into a breeding project for `targetSpeciesId`.
@@ -30,4 +32,44 @@ export function getCompatibleSpecies(
     .sort((a, b) => a.id - b.id);
 
   return ditto ? [ditto, ...pool] : pool;
+}
+
+const STAT_ORDER: StatKey[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
+
+export interface AttributeCoverage {
+  attribute: Attribute;
+  carriers: OwnedPokemon[];
+  isGap: boolean;
+}
+
+function goalAttributes(goal: BreedingGoal): Attribute[] {
+  const attrs: Attribute[] = [];
+  for (const stat of STAT_ORDER) {
+    if (goal.targetIVs[stat] === 31) attrs.push({ kind: 'iv', stat });
+  }
+  if (goal.nature) attrs.push({ kind: 'nature', nature: goal.nature });
+  return attrs;
+}
+
+/** A mon can feed the target line if it's the same species, a Ditto, or a different-species male. */
+function canContribute(mon: OwnedPokemon, goal: BreedingGoal): boolean {
+  if (mon.speciesId === goal.speciesId) return true;
+  if (mon.speciesId === DITTO_ID) return true;
+  return mon.gender === 'male';
+}
+
+export function computeCoverage(
+  goal: BreedingGoal,
+  owned: OwnedPokemon[],
+  getSpecies: (id: number) => PokemonSpecies | undefined,
+): AttributeCoverage[] {
+  return goalAttributes(goal).map((attribute) => {
+    const carriers = owned.filter(
+      (mon) =>
+        isCompatible(mon, goal, getSpecies) &&
+        carriesAttribute(mon, attribute) &&
+        canContribute(mon, goal),
+    );
+    return { attribute, carriers, isGap: carriers.length === 0 };
+  });
 }
