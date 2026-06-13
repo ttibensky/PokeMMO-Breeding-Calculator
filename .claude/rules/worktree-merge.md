@@ -9,16 +9,34 @@ goes stale.**
 ## Why the push matters
 
 New worktrees are created by `EnterWorktree`, which branches from
-**`origin/main`** by default. The worktree-removal safety check also compares
-against `origin/main`. If you merge into local `main` but never push, then
-`origin/main` lags and:
+**`origin/main`** by default. If you merge into local `main` but never push,
+`origin/main` lags and **new worktrees start stale** — missing your latest
+merged commits. Pushing `main` after every merge keeps `origin/main`
+authoritative so each new worktree branches from current history.
 
-- new worktrees start stale (missing your latest merged commits), and
-- removing a fully-merged worktree triggers a false *"N commits will be lost"*
-  alarm, because those commits aren't reachable from the stale `origin/main`.
+## The removal warning is expected — verify, then discard
 
-Pushing `main` after every merge keeps `origin/main` authoritative and makes
-both problems disappear.
+Pushing does **not** silence the worktree-removal warning:
+
+> `Worktree has N commits on <branch>. Removing will discard this work permanently.`
+
+The removal check counts commits the branch added **since the worktree's
+creation base** — not commits unreachable from `origin/main` or `main`. So it
+fires for *any* worktree that committed work, even one fully merged **and**
+pushed (verified: a branch at the exact same SHA as `origin/main` still warns).
+
+This is a false alarm once the work is integrated. Confirm that explicitly, then
+discard:
+
+```bash
+# Both must print 0 — nothing is actually unintegrated:
+git rev-list --count origin/main..<branch>
+git rev-list --count main..<branch>
+```
+
+If both are `0`, the commits are safe on `main` (and on `origin`); re-invoke
+removal with `discard_changes: true`. "Discard" refers only to the worktree's
+copy of the branch — the commits themselves live on `main`.
 
 ## Procedure
 
@@ -55,13 +73,11 @@ Let `<branch>` be the worktree's branch and `<main-root>` the main checkout
    git push origin main
    ```
 
-5. **Clean up:** remove the worktree (via `ExitWorktree` / the `WorktreeRemove`
-   hook, see [worktree-cleanup.md](worktree-cleanup.md)) and delete the branch:
+5. **Clean up:** verify the branch is fully integrated (see *The removal warning*
+   above), then remove the worktree with `discard_changes: true` (via
+   `ExitWorktree` / the `WorktreeRemove` hook, see
+   [worktree-cleanup.md](worktree-cleanup.md)) and delete the branch:
 
    ```bash
    git branch -d <branch>
    ```
-
-After step 4, `origin/main == main` and `<branch>` is fully reachable from
-`origin/main`, so worktree removal reports no lost commits — no false alarm, no
-`discard_changes: true` needed.
