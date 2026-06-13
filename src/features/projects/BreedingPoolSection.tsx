@@ -46,7 +46,7 @@ export function BreedingPoolSection({ goal, ownedPokemon }: BreedingPoolSectionP
           </Text>
         )}
         {coverage.map((cov) => (
-          <Group key={attributeLabel(cov.attribute)} gap="xs" wrap="wrap">
+          <Group key={cov.attribute.kind === 'iv' ? `iv:${cov.attribute.stat}` : `nature:${cov.attribute.nature}`} gap="xs" wrap="wrap">
             <Text size="sm" fw={600} w={70}>
               {attributeLabel(cov.attribute)}
             </Text>
@@ -63,8 +63,8 @@ export function BreedingPoolSection({ goal, ownedPokemon }: BreedingPoolSectionP
         ))}
       </Stack>
 
-      <Button variant="subtle" size="xs" mt="sm" onClick={() => setExpanded((v) => !v)}>
-        {expanded ? '▼' : '▶'} Compatible species ({pool.length})
+      <Button variant="subtle" size="xs" mt="sm" aria-expanded={expanded} onClick={() => setExpanded((v) => !v)}>
+        <span aria-hidden>{expanded ? '▼' : '▶'}</span> Compatible species ({pool.length})
       </Button>
 
       {expanded && (
