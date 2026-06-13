@@ -42,7 +42,14 @@ function ProjectCard({
   const spent = spentSoFar(project);
 
   return (
-    <Card withBorder radius="md" padding="md" shadow="sm">
+    <Card
+      withBorder
+      radius="md"
+      padding="md"
+      shadow="sm"
+      data-testid="project-card"
+      style={{ position: 'relative', cursor: 'pointer' }}
+    >
       <Stack gap="xs">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Group gap="xs" style={{ minWidth: 0 }}>
@@ -61,9 +68,16 @@ function ProjectCard({
               }}
             >
               {project.name}
+              {/* Stretched-link overlay: expands this link's hit area to the whole card.
+                  Its containing block is the relatively-positioned Card, so it is not
+                  clipped by this link's overflow:hidden. */}
+              <span
+                aria-hidden="true"
+                style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+              />
             </Text>
           </Group>
-          <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
+          <Group gap={4} wrap="nowrap" style={{ flexShrink: 0, position: 'relative', zIndex: 2 }}>
             <Tooltip label="Edit">
               <ActionIcon
                 variant="subtle"
