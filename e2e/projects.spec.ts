@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -204,6 +204,45 @@ test.describe('Projects feature', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
     await expect(page.getByRole('dialog')).not.toBeVisible();
     await expect(page.getByText('No breeding projects yet.')).toBeVisible();
+  });
+
+  // ── 2b. Re-select "Any" for nature and ability after picking a value ──────────
+  test('lets you re-select "Any" for nature and ability after picking a value', async ({ page }) => {
+    await freshStart(page);
+
+    await openGoalFormAndFill(page, {
+      trigger: 'emptyState',
+      name: 'Any-reset goal',
+      species: 'Bulbasaur',
+      stats: ['Target HP', 'Target Atk'],
+    });
+
+    const dialog = page.getByRole('dialog');
+
+    // Helper: open a select by its input, then click an option from ITS OWN listbox
+    // (scoped via aria-controls so options from other open selects can't interfere).
+    async function pickFromOwnList(input: Locator, optionText: string) {
+      await input.click();
+      const listId = await input.getAttribute('aria-controls');
+      await page.locator(`#${listId} [role="option"]`).filter({ hasText: optionText }).first().click();
+    }
+
+    // --- Nature: pick a concrete value, then reset to "Any nature" via the list item ---
+    const natureInput = dialog.getByRole('textbox', { name: 'Nature' });
+    await pickFromOwnList(natureInput, 'Adamant');
+    await expect(natureInput).toHaveValue(/Adamant/); // displayed label is "Adamant +Atk −SpA"
+
+    await pickFromOwnList(natureInput, 'Any nature');
+    await expect(natureInput).toHaveValue('');
+
+    // --- Ability: pick a concrete value, then reset to "Any ability" via the list item ---
+    // Bulbasaur's only normal ability is "Overgrow".
+    const abilityInput = dialog.getByRole('textbox', { name: 'Ability' });
+    await pickFromOwnList(abilityInput, 'Overgrow');
+    await expect(abilityInput).toHaveValue('Overgrow');
+
+    await pickFromOwnList(abilityInput, 'Any ability');
+    await expect(abilityInput).toHaveValue('');
   });
 
   // ── 3. End-to-end: report a breed result ─────────────────────────────────────

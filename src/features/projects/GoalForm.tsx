@@ -23,6 +23,8 @@ import { goalSummary, formatNatureLabel } from './projectHelpers';
 import type { StatKey, Gender } from '../../store/types';
 import type { BreedingGoal } from '../../store/types';
 
+const ANY_VALUE = '__ANY__';
+
 const STAT_KEYS: StatKey[] = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
 const STAT_LABELS: Record<StatKey, string> = {
   hp:  'HP',
@@ -121,6 +123,10 @@ export function GoalForm({ opened, onClose, editingId }: GoalFormProps) {
 
   const normalAbilityNames = species ? normalAbilities(species) : [];
   const abilityOptions = normalAbilityNames.map((name) => ({ value: name, label: name }));
+  const abilityData =
+    abilityOptions.length > 0
+      ? [{ value: ANY_VALUE, label: 'Any ability' }, ...abilityOptions]
+      : [];
 
   const genderOptions = useMemo(() => {
     if (!species || species.isGenderless) return [];
@@ -271,9 +277,12 @@ export function GoalForm({ opened, onClose, editingId }: GoalFormProps) {
           <Select
             label="Nature (optional)"
             placeholder="Any nature"
-            data={NATURES.map((n) => ({ value: n, label: formatNatureLabel(n) }))}
+            data={[
+              { value: ANY_VALUE, label: 'Any nature' },
+              ...NATURES.map((n) => ({ value: n, label: formatNatureLabel(n) })),
+            ]}
             value={form.values.nature}
-            onChange={(val) => form.setFieldValue('nature', val)}
+            onChange={(val) => form.setFieldValue('nature', val === ANY_VALUE ? null : val)}
             searchable
             clearable
             aria-label="Nature"
@@ -282,9 +291,9 @@ export function GoalForm({ opened, onClose, editingId }: GoalFormProps) {
           <Select
             label="Ability (optional)"
             placeholder="Any ability"
-            data={abilityOptions.length > 0 ? abilityOptions : []}
+            data={abilityData}
             value={form.values.ability}
-            onChange={(val) => form.setFieldValue('ability', val)}
+            onChange={(val) => form.setFieldValue('ability', val === ANY_VALUE ? null : val)}
             clearable
             disabled={abilityOptions.length === 0}
             aria-label="Ability"
