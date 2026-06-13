@@ -56,7 +56,7 @@ export function BreedingPoolSection({ goal, ownedPokemon }: BreedingPoolSectionP
               </Badge>
             ) : (
               cov.carriers.map((mon) => (
-                <PokemonAvatar key={mon.id} speciesId={mon.speciesId} size={24} showName />
+                <PokemonAvatar key={mon.id} speciesId={mon.speciesId} size="sm" showName />
               ))
             )}
           </Group>
@@ -88,7 +88,7 @@ export function BreedingPoolSection({ goal, ownedPokemon }: BreedingPoolSectionP
               <Group gap="sm" wrap="wrap">
                 {filteredPool.map((s) => (
                   <Group key={s.id} gap={4} wrap="nowrap">
-                    <PokemonAvatar speciesId={s.id} size={28} showName />
+                    <PokemonAvatar speciesId={s.id} size="md" showName />
                     {s.eggGroups.map((g) => (
                       <Badge key={g} size="xs" variant="outline" color="gray">
                         {g}
