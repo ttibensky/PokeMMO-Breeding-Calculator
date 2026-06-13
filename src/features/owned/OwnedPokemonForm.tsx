@@ -40,7 +40,7 @@ interface FormValues {
 
 interface OwnedPokemonFormProps {
   opened: boolean;
-  onClose: () => void;
+  onClose: (didSubmit?: boolean) => void;
   editingId?: string;
 }
 
@@ -178,7 +178,7 @@ export function OwnedPokemonForm({ opened, onClose, editingId }: OwnedPokemonFor
     } else {
       addOwnedPokemon(payload);
     }
-    onClose();
+    onClose(true);
   }
 
   return (
@@ -271,7 +271,7 @@ export function OwnedPokemonForm({ opened, onClose, editingId }: OwnedPokemonFor
           )}
 
           <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={onClose} type="button">
+            <Button variant="default" onClick={() => onClose(false)} type="button">
               Cancel
             </Button>
             <Button type="submit">
