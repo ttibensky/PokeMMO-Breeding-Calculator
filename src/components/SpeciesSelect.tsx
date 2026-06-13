@@ -35,7 +35,7 @@ export function SpeciesSelect({ value, onChange, label = 'Species', required = f
         const species = getSpeciesById(id);
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {species && <PokemonAvatar speciesId={id} size={24} />}
+            {species && <PokemonAvatar speciesId={id} size="sm" />}
             <span>{option.label}</span>
           </div>
         );

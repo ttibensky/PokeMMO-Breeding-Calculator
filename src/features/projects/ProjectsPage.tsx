@@ -53,7 +53,7 @@ function ProjectCard({
       <Stack gap="xs">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Group gap="xs" style={{ minWidth: 0 }}>
-            <PokemonAvatar speciesId={project.goal.speciesId} size={36} />
+            <PokemonAvatar speciesId={project.goal.speciesId} size="md" />
             <Text
               component={Link}
               to={`/projects/${project.id}`}
