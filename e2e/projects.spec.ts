@@ -440,6 +440,26 @@ test.describe('Projects feature', () => {
     await expect(nameInput).toHaveValue('My custom build');
   });
 
+  // ── 10. Nature dropdown shows stat changes in option labels ──────────────────
+  test('nature dropdown options show stat changes (e.g. Adamant +Atk −SpA)', async ({ page }) => {
+    await freshStart(page);
+
+    // Open the goal form (empty-state trigger brings us to the open dialog)
+    await openGoalFormAndFill(page, {
+      trigger: 'emptyState',
+      name: 'Nature Label Test',
+      species: 'Bulbasaur',
+      stats: ['Target HP', 'Target Atk'],
+    });
+
+    // Interact with the Nature select inside the open dialog
+    const natureInput = page.getByRole('textbox', { name: 'Nature' });
+    await natureInput.click();
+    await natureInput.fill('Adamant');
+    const option = page.locator('[role="option"]', { hasText: 'Adamant +Atk −SpA' });
+    await expect(option).toBeVisible();
+  });
+
   // ── 9. Delete a project ───────────────────────────────────────────────────────
   test('deletes a project after confirming the window.confirm dialog', async ({ page }) => {
     await freshStart(page);
