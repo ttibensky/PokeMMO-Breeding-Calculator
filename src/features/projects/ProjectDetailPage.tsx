@@ -42,6 +42,7 @@ import {
   STAT_LABELS,
   formatMoney,
   ITEM_LABELS,
+  formatNatureLabel,
 } from './projectHelpers';
 import { BreedingPoolSection } from './BreedingPoolSection';
 import type { Gender, IVs, StatKey, ItemKey } from '../../store/types';
@@ -384,7 +385,7 @@ function ReportResultModal({
             {/* Nature */}
             <Select
               label="Nature"
-              data={NATURES.map((n) => ({ value: n, label: n }))}
+              data={NATURES.map((n) => ({ value: n, label: formatNatureLabel(n) }))}
               value={babyNature}
               onChange={(val) => val && setBabyNature(val)}
               searchable
