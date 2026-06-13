@@ -33,14 +33,16 @@ describe('OwnedPokemonList', () => {
     it('shows the empty-state message when no pokemon are owned', () => {
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
       expect(screen.getByText('No Pokémon yet')).toBeInTheDocument();
     });
 
     it('shows an Add button in the empty state that calls onAdd', () => {
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
       const btn = screen.getByRole('button', { name: /add your first pokémon/i });
       fireEvent.click(btn);
       expect(onAdd).toHaveBeenCalledTimes(1);
@@ -53,7 +55,8 @@ describe('OwnedPokemonList', () => {
       useBreedingStore.getState().addOwnedPokemon(makeOwnedInput({ speciesId: 4 })); // Charmander
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
       expect(screen.getByText('Bulbasaur')).toBeInTheDocument();
       expect(screen.getByText('Charmander')).toBeInTheDocument();
     });
@@ -63,7 +66,8 @@ describe('OwnedPokemonList', () => {
       useBreedingStore.getState().addOwnedPokemon(makeOwnedInput({ speciesId: 4 })); // Charmander
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
 
       const searchInput = screen.getByRole('textbox', { name: /search pokémon/i });
       fireEvent.change(searchInput, { target: { value: 'Bulba' } });
@@ -78,7 +82,8 @@ describe('OwnedPokemonList', () => {
       useBreedingStore.getState().addOwnedPokemon(makeOwnedInput({ speciesId: 1 }));
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
 
       const searchInput = screen.getByRole('textbox', { name: /search pokémon/i });
       fireEvent.change(searchInput, { target: { value: 'zzznomatch' } });
@@ -92,18 +97,32 @@ describe('OwnedPokemonList', () => {
       const id = useBreedingStore.getState().addOwnedPokemon(makeOwnedInput({ speciesId: 1 }));
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
 
       const editBtn = screen.getByRole('button', { name: /edit bulbasaur/i });
       fireEvent.click(editBtn);
       expect(onEdit).toHaveBeenCalledWith(id);
     });
 
+    it('Duplicate action calls onDuplicate with the correct id', () => {
+      const id = useBreedingStore.getState().addOwnedPokemon(makeOwnedInput({ speciesId: 1 }));
+      const onAdd = vi.fn();
+      const onEdit = vi.fn();
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
+
+      const duplicateBtn = screen.getByRole('button', { name: /duplicate bulbasaur/i });
+      fireEvent.click(duplicateBtn);
+      expect(onDuplicate).toHaveBeenCalledWith(id);
+    });
+
     it('Delete action opens confirm dialog and removes mon on confirm', async () => {
       useBreedingStore.getState().addOwnedPokemon(makeOwnedInput({ speciesId: 1 }));
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
 
       const deleteBtn = screen.getByRole('button', { name: /delete bulbasaur/i });
       fireEvent.click(deleteBtn);
@@ -127,7 +146,8 @@ describe('OwnedPokemonList', () => {
       useBreedingStore.getState().addOwnedPokemon(makeOwnedInput({ isShiny: true }));
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
       expect(screen.getByText('Shiny')).toBeInTheDocument();
     });
 
@@ -136,7 +156,8 @@ describe('OwnedPokemonList', () => {
       useBreedingStore.getState().addOwnedPokemon(makeOwnedInput({ isShiny: false }));
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
       expect(screen.queryByText('Shiny')).not.toBeInTheDocument();
     });
 
@@ -145,7 +166,8 @@ describe('OwnedPokemonList', () => {
       useBreedingStore.getState().addOwnedPokemon(makeOwnedInput({ isShiny: true }));
       const onAdd = vi.fn();
       const onEdit = vi.fn();
-      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} />);
+      const onDuplicate = vi.fn();
+      renderWithMantine(<OwnedPokemonList onAdd={onAdd} onEdit={onEdit} onDuplicate={onDuplicate} />);
       expect(screen.queryByText('Shiny')).not.toBeInTheDocument();
     });
   });

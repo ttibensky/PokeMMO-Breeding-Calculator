@@ -170,4 +170,37 @@ test.describe('Owned Pokémon page', () => {
     await expect(page.getByText('Bulbasaur')).toBeVisible();
     await expect(page.getByText('No Pokémon yet')).not.toBeVisible();
   });
+
+  // 7. Duplicate a Pokémon: prefilled form creates an independent copy
+  test('duplicates a Pokémon with prefilled values and adds an independent copy', async ({ page }) => {
+    // Add Bulbasaur with HP IV 31 as the source
+    await openAddForm(page, 'emptyState');
+    await selectSpecies(page, 'Bulbasaur');
+    const hpInput = page.getByLabel('HP');
+    await hpInput.fill('31');
+    await hpInput.press('Tab');
+    let dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: 'Add Pokémon' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Exactly one Bulbasaur card so far
+    await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).toHaveCount(1);
+
+    // Click Duplicate
+    await page.getByRole('button', { name: 'Duplicate Bulbasaur' }).click();
+    dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+
+    // Modal is in duplicate mode and prefilled
+    await expect(dialog).toContainText('Duplicate Pokémon');
+    await expect(page.getByRole('textbox', { name: 'Species' })).toHaveValue('Bulbasaur');
+    await expect(page.getByLabel('HP')).toHaveValue('31');
+
+    // Save the duplicate (add mode -> "Add Pokémon")
+    await dialog.getByRole('button', { name: 'Add Pokémon' }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Two independent Bulbasaur cards now exist
+    await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).toHaveCount(2);
+  });
 });
