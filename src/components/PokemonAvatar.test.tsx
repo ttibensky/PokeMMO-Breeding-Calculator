@@ -68,4 +68,13 @@ describe('PokemonAvatar', () => {
     expect(img.getAttribute('width')).toBe('80');
     expect(img.getAttribute('height')).toBe('80');
   });
+
+  it('zooms the sprite via a centered transform inside an overflow-hidden frame', () => {
+    renderWithMantine(<PokemonAvatar speciesId={1} size="lg" />);
+    const img = screen.getByAltText('Bulbasaur') as HTMLImageElement;
+    // Zoom is applied as a CSS transform on the img (attributes stay at the token px).
+    expect(img.style.transform).toBe('scale(1.4)');
+    // The img is wrapped in a fixed-size frame that clips the overflowing margins.
+    expect(img.parentElement?.style.overflow).toBe('hidden');
+  });
 });

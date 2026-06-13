@@ -5,6 +5,8 @@ import { getSpeciesById } from '../data/index';
 const AVATAR_SIZES = { sm: 56, md: 80, lg: 120 } as const;
 type AvatarSize = keyof typeof AVATAR_SIZES;
 
+const SPRITE_ZOOM = 1.4; // crops ~15% of transparent margin per edge
+
 interface PokemonAvatarProps {
   speciesId: number;
   size?: AvatarSize;
@@ -45,15 +47,27 @@ export function PokemonAvatar({ speciesId, size = 'md', showName = false }: Poke
           aria-label={species.name}
         />
       ) : (
-        <img
-          src={species.spriteUrl}
-          alt={species.name}
-          width={px}
-          height={px}
-          loading="lazy"
-          style={{ imageRendering: 'pixelated', flexShrink: 0 }}
-          onError={() => setImgError(true)}
-        />
+        <Box
+          style={{
+            width: px,
+            height: px,
+            overflow: 'hidden',
+            flexShrink: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src={species.spriteUrl}
+            alt={species.name}
+            width={px}
+            height={px}
+            loading="lazy"
+            style={{ imageRendering: 'pixelated', transform: `scale(${SPRITE_ZOOM})` }}
+            onError={() => setImgError(true)}
+          />
+        </Box>
       )}
       {showName && <Text size="sm">{species.name}</Text>}
     </Box>
