@@ -364,7 +364,7 @@ function ReportResultModal({
 
             {/* Species read-only */}
             <Group gap="xs" align="center">
-              <PokemonAvatar speciesId={offspringSpecies.id} size={32} showName />
+              <PokemonAvatar speciesId={offspringSpecies.id} size="md" showName />
               <Text size="xs" c="dimmed">(species is fixed by the pairing)</Text>
             </Group>
 
@@ -535,7 +535,7 @@ export function ProjectDetailPage() {
       </Group>
 
       <Group gap="sm" mb="xs" align="flex-start" wrap="wrap">
-        {species && <PokemonAvatar speciesId={species.id} size={48} />}
+        {species && <PokemonAvatar speciesId={species.id} size="lg" />}
         <Box style={{ flex: 1 }}>
           <Group gap="xs" align="center" wrap="wrap">
             <Title order={2}>{project.name}</Title>
@@ -576,7 +576,7 @@ export function ProjectDetailPage() {
           return (
             <Alert color="green" title="Goal achieved!">
               <Group gap="sm" align="center">
-                {match && <PokemonAvatar speciesId={match.speciesId} size={32} showName />}
+                {match && <PokemonAvatar speciesId={match.speciesId} size="md" showName />}
                 {match && (
                   <Text size="sm">
                     {formatIVs(match.ivs)} · {match.nature} · {GENDER_LABELS[match.gender]}
@@ -612,7 +612,7 @@ export function ProjectDetailPage() {
                       {parentA ? (
                         <>
                           <Group gap="xs">
-                            <PokemonAvatar speciesId={parentA.speciesId} size={32} showName />
+                            <PokemonAvatar speciesId={parentA.speciesId} size="md" showName />
                           </Group>
                           <Text size="xs" c="dimmed">{formatIVs(parentA.ivs)}</Text>
                           <Text size="xs" c="dimmed">
@@ -636,7 +636,7 @@ export function ProjectDetailPage() {
                       {parentB ? (
                         <>
                           <Group gap="xs">
-                            <PokemonAvatar speciesId={parentB.speciesId} size={32} showName />
+                            <PokemonAvatar speciesId={parentB.speciesId} size="md" showName />
                           </Group>
                           <Text size="xs" c="dimmed">{formatIVs(parentB.ivs)}</Text>
                           <Text size="xs" c="dimmed">
@@ -676,7 +676,7 @@ export function ProjectDetailPage() {
                   {offSp && (
                     <Group gap="xs" align="center">
                       <Text size="xs" fw={500}>Predicted offspring:</Text>
-                      <PokemonAvatar speciesId={offSp.id} size={24} showName />
+                      <PokemonAvatar speciesId={offSp.id} size="sm" showName />
                       {rec.pair.prediction.nature && (
                         <Text size="xs" c="dimmed">
                           {(rec.pair.prediction.nature.chance * 100).toFixed(0)}% {rec.pair.prediction.nature.value}
@@ -701,7 +701,7 @@ export function ProjectDetailPage() {
                           {rec.alternativesForA.map((altId) => {
                             const alt = getOwnedById(altId);
                             return alt ? (
-                              <PokemonAvatar key={altId} speciesId={alt.speciesId} size={20} />
+                              <PokemonAvatar key={altId} speciesId={alt.speciesId} size="sm" />
                             ) : null;
                           })}
                         </Group>
@@ -712,7 +712,7 @@ export function ProjectDetailPage() {
                           {rec.alternativesForB.map((altId) => {
                             const alt = getOwnedById(altId);
                             return alt ? (
-                              <PokemonAvatar key={altId} speciesId={alt.speciesId} size={20} />
+                              <PokemonAvatar key={altId} speciesId={alt.speciesId} size="sm" />
                             ) : null;
                           })}
                         </Group>
@@ -862,7 +862,7 @@ export function ProjectDetailPage() {
                         <Text size="xs" c="dimmed" fw={500}>#{idx + 1}</Text>
                         {child ? (
                           <>
-                            <PokemonAvatar speciesId={child.speciesId} size={28} showName />
+                            <PokemonAvatar speciesId={child.speciesId} size="md" showName />
                             <Text size="xs" c="dimmed">{formatIVs(child.ivs)}</Text>
                             <Text size="xs" c="dimmed">
                               {child.nature} · {GENDER_LABELS[child.gender]}

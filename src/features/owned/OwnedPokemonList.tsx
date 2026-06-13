@@ -105,7 +105,7 @@ export function OwnedPokemonList({ onAdd, onEdit }: OwnedPokemonListProps) {
               <Card key={mon.id} withBorder padding="sm" radius="md">
                 <Group justify="space-between" wrap="nowrap">
                   <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
-                    <PokemonAvatar speciesId={mon.speciesId} size={48} />
+                    <PokemonAvatar speciesId={mon.speciesId} size="lg" />
                     <Stack gap={2} style={{ minWidth: 0 }}>
                       <Group gap="xs" wrap="wrap">
                         <Text fw={600} size="sm">{name}</Text>
