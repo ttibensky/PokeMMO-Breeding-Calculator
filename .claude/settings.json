@@ -16,5 +16,18 @@
       "Bash(cat *.env*)",
       "Bash(cat */.env*)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/setup-worktree.mjs\"",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
   }
 }
