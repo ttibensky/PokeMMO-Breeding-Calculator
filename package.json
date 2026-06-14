@@ -15,6 +15,9 @@
     "cleanup:worktree": "node scripts/cleanup-worktree.mjs",
     "deploy": "gh workflow run deploy.yml"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "dependencies": {
     "@mantine/core": "^7.17.8",
     "@mantine/form": "^7.17.8",
@@ -32,7 +35,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^22.15.29",
+    "@types/node": "^24",
     "@types/react": "^18.3.21",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.5.2",
