@@ -6,6 +6,14 @@ of the generic `checkout main → pull → merge → delete` flow. It keeps `mai
 linear and — critically — **pushes `main` to `origin` so `origin/main` never
 goes stale.**
 
+## Paths while isolated
+
+While a session is isolated in a worktree, every Read/Write/Edit path must be
+worktree-relative — under `.claude/worktrees/<name>/`. Never reuse a
+main-checkout absolute path for file operations; the isolation guard will reject
+it and cost a round-trip. Confirm the current working directory before the first
+write.
+
 ## Why the push matters
 
 New worktrees are created by `EnterWorktree`, which branches from
@@ -34,9 +42,11 @@ git rev-list --count origin/main..<branch>
 git rev-list --count main..<branch>
 ```
 
-If both are `0`, the commits are safe on `main` (and on `origin`); re-invoke
-removal with `discard_changes: true`. "Discard" refers only to the worktree's
-copy of the branch — the commits themselves live on `main`.
+If both are `0`, the commits are safe on `main` (and on `origin`). Because the
+warning **always** fires and you have just done the verification it asks for,
+call `ExitWorktree` (or the removal) with `discard_changes: true` in the **first call** — do not make a bare `action: "remove"` call just to trigger the warning
+and then retry. "Discard" refers only to the worktree's copy of the branch — the
+commits themselves live on `main`.
 
 ## Procedure
 
