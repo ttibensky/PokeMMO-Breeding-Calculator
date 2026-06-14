@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "typecheck": "tsc -b",
     "build:dataset": "tsx scripts/build-dataset.ts",
-    "cleanup:worktree": "node scripts/cleanup-worktree.mjs"
+    "cleanup:worktree": "node scripts/cleanup-worktree.mjs",
+    "deploy": "gh workflow run deploy.yml"
   },
   "dependencies": {
     "@mantine/core": "^7.17.8",
