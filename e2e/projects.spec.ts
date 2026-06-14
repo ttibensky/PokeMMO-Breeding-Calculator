@@ -11,7 +11,7 @@ async function freshStart(page: Page, hash = './#/projects') {
 
 /** Drive a Mantine searchable Select (portal-rendered options at document level). */
 async function selectOption(page: Page, inputName: string, optionText: string) {
-  const input = page.getByRole('textbox', { name: inputName });
+  const input = page.getByRole('textbox', { name: inputName, exact: true });
   await input.click();
   await input.fill(optionText);
   const option = page.locator('[role="option"]', { hasText: optionText }).first();
@@ -49,7 +49,7 @@ async function addOwnedPokemon(
 ) {
   await openAddOwnedForm(page, opts.via ?? 'header');
 
-  // Species
+  // Species (OwnedPokemonForm uses aria-label="Species")
   await selectOption(page, 'Species', opts.species);
 
   // IVs
@@ -99,8 +99,8 @@ async function openGoalFormAndFill(
   // Name
   await page.getByLabel('Project name').fill(opts.name);
 
-  // Species — SpeciesSelect uses aria-label "Species" (same pattern as Owned form)
-  await selectOption(page, 'Species', opts.species);
+  // Species — GoalForm's SpeciesSelect uses label="Target species"
+  await selectOption(page, 'Target species', opts.species);
 
   // Stats — checkboxes with aria-label "Target HP" etc.
   for (const statLabel of opts.stats) {
@@ -353,7 +353,7 @@ test.describe('Projects feature', () => {
     await page.getByRole('button', { name: 'New Project' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByLabel('Project name').fill('Char 3×31');
-    await selectOption(page, 'Species', 'Charmander');
+    await selectOption(page, 'Target species', 'Charmander');
     await page.getByRole('checkbox', { name: 'Target HP' }).check();
     await page.getByRole('checkbox', { name: 'Target Atk' }).check();
     await page.getByRole('checkbox', { name: 'Target Spe' }).check();
@@ -456,7 +456,8 @@ test.describe('Projects feature', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     const nameInput = page.getByLabel('Project name');
-    const speciesInput = page.getByRole('textbox', { name: 'Species' });
+    // GoalForm's SpeciesSelect uses label="Target species"
+    const speciesInput = page.getByRole('textbox', { name: 'Target species', exact: true });
 
     // Field order: species selector renders above the name input.
     const speciesBox = await speciesInput.boundingBox();
@@ -466,16 +467,16 @@ test.describe('Projects feature', () => {
     expect(speciesBox!.y).toBeLessThan(nameBox!.y);
 
     // Selecting a species pre-fills the (empty) name.
-    await selectOption(page, 'Species', 'Bulbasaur');
+    await selectOption(page, 'Target species', 'Bulbasaur');
     await expect(nameInput).toHaveValue('Bulbasaur');
 
     // Re-selecting a different species regenerates the name (still untouched).
-    await selectOption(page, 'Species', 'Charmander');
+    await selectOption(page, 'Target species', 'Charmander');
     await expect(nameInput).toHaveValue('Charmander');
 
     // After a manual edit, changing species leaves the name alone.
     await nameInput.fill('My custom build');
-    await selectOption(page, 'Species', 'Bulbasaur');
+    await selectOption(page, 'Target species', 'Bulbasaur');
     await expect(nameInput).toHaveValue('My custom build');
   });
 

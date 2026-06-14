@@ -26,14 +26,83 @@ async function selectSpecies(page: import('@playwright/test').Page, name: string
   await option.click();
 }
 
-// Helper: pick a nature from the searchable Nature Select.
+// Helper: pick a nature from the searchable Nature Select in the open dialog.
+// Scoped to the dialog to avoid collision with the filter-bar Nature input,
+// which is rendered on the owned list page whenever Pokémon are present.
 async function selectNature(page: import('@playwright/test').Page, name: string) {
-  const natureInput = page.getByRole('textbox', { name: 'Nature' });
+  const dialog = page.getByRole('dialog');
+  const natureInput = dialog.getByRole('textbox', { name: 'Nature' });
   await natureInput.click();
   await natureInput.fill(name);
   const option = page.locator('[role="option"]', { hasText: name }).first();
   await option.waitFor({ state: 'visible' });
   await option.click();
+}
+
+// Helper: add a Pokémon through the form.
+// `via` controls how the modal is opened: 'emptyState' for the first mon, 'header' for subsequent.
+// `shiny` requires features.shiny to be enabled in the store before calling.
+async function addPokemon(
+  page: import('@playwright/test').Page,
+  opts: { species: string; nature?: string; shiny?: boolean; via?: 'header' | 'emptyState' }
+) {
+  const { species, nature, shiny = false, via = 'header' } = opts;
+  await openAddForm(page, via);
+  const dialog = page.getByRole('dialog');
+  await selectSpecies(page, species);
+  if (nature) {
+    // Scope the nature select to the dialog to avoid collision with the filter-bar Nature input
+    const natureInput = dialog.getByRole('textbox', { name: 'Nature' });
+    await natureInput.click();
+    await natureInput.fill(nature);
+    const option = page.locator('[role="option"]', { hasText: nature }).first();
+    await option.waitFor({ state: 'visible' });
+    await option.click();
+  }
+  if (shiny) {
+    await dialog.getByLabel('Shiny').check();
+  }
+  await dialog.getByRole('button', { name: 'Add Pokémon' }).click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.getByText(species)).toBeVisible();
+}
+
+// Helper: pick a filter Select value inside the owned-filter-bar.
+// Clicks the combobox input by aria-label within the filter bar, then picks the option.
+async function pickFilterSelect(
+  page: import('@playwright/test').Page,
+  label: string,
+  value: string
+) {
+  const filterBar = page.getByTestId('owned-filter-bar');
+  // Mantine Select renders a readonly textbox; aria-label is on the input element.
+  // The dropdown opens on click and lists options in a portal at document body.
+  const input = filterBar.getByRole('textbox', { name: label });
+  await input.click();
+  // Wait for options to appear (rendered in portal) and click the matching one
+  const option = page.locator('[role="option"]', { hasText: value }).first();
+  await option.waitFor({ state: 'visible' });
+  await option.click();
+  // Wait for option dropdown to close
+  await expect(page.locator('[role="option"]', { hasText: value }).first()).not.toBeVisible();
+}
+
+// Helper: clear a filter Select inside the filter bar.
+// Mantine's clear button has aria-hidden="true" and no aria-label, so it can't be found
+// via getByRole. We locate the specific Select's clear button via its input element:
+// the clear button (.mantine-InputClearButton-root) is a sibling of the labeled input
+// inside the same .mantine-Input-wrapper.
+async function clearFilterSelect(page: import('@playwright/test').Page, label: string) {
+  // Navigate from the input → parent wrapper div → the clear button button inside it
+  const inputEl = page.locator(`[data-testid="owned-filter-bar"] [aria-label="${label}"]`);
+  // The clear button is a sibling of the input inside the same parent (.mantine-Input-wrapper)
+  // XPath: parent of input → child button.mantine-InputClearButton-root
+  const clearBtn = page.locator(
+    `[data-testid="owned-filter-bar"] [aria-label="${label}"] ~ div button.mantine-InputClearButton-root`
+  );
+  await inputEl.waitFor({ state: 'visible' });
+  await clearBtn.waitFor({ state: 'attached' });
+  await clearBtn.click({ force: true });
 }
 
 test.describe('Owned Pokémon page', () => {
@@ -139,8 +208,9 @@ test.describe('Owned Pokémon page', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Save Changes' }).click();
     await expect(page.getByRole('dialog')).not.toBeVisible();
 
-    // Jolly should now appear in the card (the list renders mon.nature)
-    await expect(page.getByText('Jolly')).toBeVisible();
+    // Jolly should now appear in the card (the list renders mon.nature).
+    // Scope to a Mantine Text element (not a span in a portal) to avoid strict-mode violations.
+    await expect(page.locator('p.mantine-Text-root', { hasText: 'Jolly' })).toBeVisible();
   });
 
   // 5. Delete a Pokémon: confirm dialog → mon removed → empty state restored
@@ -217,5 +287,127 @@ test.describe('Owned Pokémon page', () => {
 
     // Two independent Bulbasaur cards now exist
     await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).toHaveCount(2);
+  });
+
+  // ── Filter / Sort tests ──────────────────────────────────────────────────────
+  // Seed: Bulbasaur (Adamant), Charmander (Jolly), Squirtle (Hardy/default).
+  // All three have distinct species names and natures.
+
+  // 8. Nature filter narrows results; clearing restores all
+  test('filter by nature narrows the list and clearing the filter restores all Pokémon', async ({ page }) => {
+    // Seed three Pokémon
+    await addPokemon(page, { species: 'Bulbasaur', nature: 'Adamant', via: 'emptyState' });
+    await addPokemon(page, { species: 'Charmander', nature: 'Jolly', via: 'header' });
+    await addPokemon(page, { species: 'Squirtle', nature: 'Hardy', via: 'header' });
+
+    // Apply Nature filter: Adamant
+    await pickFilterSelect(page, 'Filter by nature', 'Adamant');
+
+    // Only Bulbasaur should be visible; Charmander and Squirtle should be gone
+    await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit Charmander' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit Squirtle' })).not.toBeVisible();
+
+    // Clear the Nature filter
+    await clearFilterSelect(page, 'Filter by nature');
+
+    // All three should be visible again
+    await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit Charmander' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit Squirtle' })).toBeVisible();
+  });
+
+  // 9. Shiny-only checkbox hides non-shiny; unchecking restores all
+  test('shiny-only checkbox shows only shiny Pokémon and unchecking restores all', async ({ page }) => {
+    // Enable shiny feature via localStorage before the store hydrates
+    await page.evaluate(() => {
+      const stored = localStorage.getItem('pokemmo-breeding-store');
+      const parsed = stored ? JSON.parse(stored) : { state: { settings: { features: {} } }, version: 1 };
+      parsed.state.settings = parsed.state.settings ?? {};
+      parsed.state.settings.features = parsed.state.settings.features ?? {};
+      parsed.state.settings.features.shiny = true;
+      localStorage.setItem('pokemmo-breeding-store', JSON.stringify(parsed));
+    });
+    await page.reload();
+    await page.waitForURL('**/#/owned');
+
+    // Seed: Bulbasaur (not shiny), Charmander (shiny)
+    await addPokemon(page, { species: 'Bulbasaur', via: 'emptyState' });
+    await addPokemon(page, { species: 'Charmander', shiny: true, via: 'header' });
+
+    // Both should be visible initially
+    await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit Charmander' })).toBeVisible();
+
+    // Check "Shiny only"
+    const filterBar = page.getByTestId('owned-filter-bar');
+    await filterBar.getByLabel('Shiny only').check();
+
+    // Only shiny Charmander should remain
+    await expect(page.getByRole('button', { name: 'Edit Charmander' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).not.toBeVisible();
+
+    // Uncheck "Shiny only" — both should return
+    await filterBar.getByLabel('Shiny only').uncheck();
+    await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit Charmander' })).toBeVisible();
+  });
+
+  // 10. Sort by species name asc and desc
+  test('sort by species name orders cards alphabetically and reverses on direction toggle', async ({ page }) => {
+    // Seed Squirtle before Bulbasaur (so default date-added order is Squirtle first)
+    await addPokemon(page, { species: 'Squirtle', via: 'emptyState' });
+    await addPokemon(page, { species: 'Bulbasaur', via: 'header' });
+    await addPokemon(page, { species: 'Charmander', via: 'header' });
+
+    // Set Sort by to "Species name"
+    const filterBar = page.getByTestId('owned-filter-bar');
+    // Sort by is a non-searchable select; click the combobox
+    const sortByInput = filterBar.getByRole('textbox', { name: 'Sort by' });
+    await sortByInput.click();
+    const nameOption = page.locator('[role="option"]', { hasText: 'Species name' }).first();
+    await nameOption.waitFor({ state: 'visible' });
+    await nameOption.click();
+
+    // Default direction is asc — Bulbasaur < Charmander < Squirtle alphabetically
+    const editButtons = page.getByRole('button', { name: /^Edit / });
+    const firstAsc = editButtons.first();
+    const lastAsc = editButtons.last();
+    await expect(firstAsc).toHaveAccessibleName('Edit Bulbasaur');
+    await expect(lastAsc).toHaveAccessibleName('Edit Squirtle');
+
+    // Toggle direction to desc
+    await filterBar.getByRole('button', { name: 'Sort direction' }).click();
+
+    // Now Squirtle should be first, Bulbasaur last
+    const firstDesc = editButtons.first();
+    const lastDesc = editButtons.last();
+    await expect(firstDesc).toHaveAccessibleName('Edit Squirtle');
+    await expect(lastDesc).toHaveAccessibleName('Edit Bulbasaur');
+  });
+
+  // 11. No matches message when filter matches nothing
+  test('shows "No Pokémon match your filters." when active filter matches no Pokémon', async ({ page }) => {
+    // Seed: Bulbasaur (Adamant, default male) and Charmander (Jolly, default male).
+    // The nature filter options derive from what's owned, so only Adamant and Jolly appear.
+    // Filter by Nature=Adamant AND Gender=Female — Bulbasaur is male, so no match.
+    await addPokemon(page, { species: 'Bulbasaur', nature: 'Adamant', via: 'emptyState' });
+    await addPokemon(page, { species: 'Charmander', nature: 'Jolly', via: 'header' });
+
+    // Apply Nature filter: Adamant — only Bulbasaur shows
+    await pickFilterSelect(page, 'Filter by nature', 'Adamant');
+    await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).toBeVisible();
+
+    // Clear the nature filter, then use the search text input to produce zero matches
+    await clearFilterSelect(page, 'Filter by nature');
+
+    // Use the search text input (not inside the filter bar) to filter by a non-existent name
+    const searchInput = page.getByLabel('Search Pokémon');
+    await searchInput.fill('Mewtwo999');
+
+    // No cards should appear; the "no match" message should show
+    await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit Charmander' })).not.toBeVisible();
+    await expect(page.getByText('No Pokémon match your filters.')).toBeVisible();
   });
 });

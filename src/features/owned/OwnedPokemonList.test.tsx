@@ -89,7 +89,7 @@ describe('OwnedPokemonList', () => {
       fireEvent.change(searchInput, { target: { value: 'zzznomatch' } });
 
       await waitFor(() => {
-        expect(screen.getByText(/no pokémon match your search/i)).toBeInTheDocument();
+        expect(screen.getByText(/no pokémon match your filters/i)).toBeInTheDocument();
       });
     });
 
