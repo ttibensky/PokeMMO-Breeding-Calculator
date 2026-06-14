@@ -30,7 +30,7 @@ A pure-frontend breeding planner for [PokeMMO](https://pokemmo.com/). Record the
 
 ## Getting Started
 
-**Prerequisites:** Node.js 22 (use `nvm` or `fnm` if needed).
+**Prerequisites:** Node.js 24 (run `nvm use` / `fnm use` to match the version pinned in `.nvmrc`).
 
 ```bash
 npm install
