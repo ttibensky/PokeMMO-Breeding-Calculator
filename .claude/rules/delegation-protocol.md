@@ -21,6 +21,12 @@ Narrow exceptions where you may act directly:
 | `test-author` | Sonnet | All test writing — e2e (Playwright) for behavioral changes, unit (Vitest) for everything else. |
 | `verifier` | Haiku | All test/typecheck/lint/build runs. Hard gate: the full suite must pass before a task is "done". |
 
+**`subagent_type` is lowercase and must match the fleet table exactly**
+(`explorer`, `planner`, `implementer`, `test-author`, `verifier`). Do not use the
+built-in `Explore` agent when you mean the project `explorer` — `Explore` is not
+haiku-pinned and carries broader tools, so it is slower and costlier for the
+read-only digests the fleet `explorer` is tuned for.
+
 For anything that doesn't fit, spawn an ad-hoc `Agent` with an explicit `model` (prefer Haiku for read/inspect, Sonnet for write).
 
 ## What stays on Opus (never delegated)
@@ -49,7 +55,7 @@ The win is keeping bulky context out of your window — so delegate *well*:
 - **Ask precise questions, not "read this file."** "What's the signature and call sites of `X`?" returns a tight digest; "read foo.ts" returns noise.
 - **Demand digests, not dumps.** The agents are instructed to return `path:line` + summaries. Don't ask them to echo file contents back.
 - **Give implementers a complete, self-contained spec** so they don't have to re-explore what you already know. Pass along the relevant `path:line` facts from exploration.
-- **Parallelize independent work.** Spawn multiple `explorer`s for different questions, or multiple `implementer`s for independent units, in a single message. Use worktree isolation only if they'd edit overlapping files.
+- **Parallelize independent work.** Before dispatching *any* explorer, ask: "what other independent questions can I answer right now?" Batch them as multiple `Agent` tool calls in a **single message** — spawn multiple `explorer`s for different questions, or multiple `implementer`s for independent units, at once. Dispatching independent explorers in sequential turns is a defect, not a style choice: each sequential dispatch adds a full round-trip. Use worktree isolation only if they'd edit overlapping files.
 - **Relay, don't paste.** Summarize subagent results for the user; don't dump their full output.
 
 ## Escalation (when a subagent struggles)
