@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import { MemoryRouter } from 'react-router-dom';
 import { GoalForm } from './GoalForm';
 import { useBreedingStore, resetStore } from '../../store/index';
 
-function renderForm(props: {
+async function renderForm(props: {
   opened: boolean;
   onClose?: () => void;
   editingId?: string;
@@ -18,6 +18,9 @@ function renderForm(props: {
       </MantineProvider>
     </MemoryRouter>,
   );
+  // Flush Mantine's post-mount Popover state updates inside act so React
+  // doesn't warn about updates outside act().
+  await act(async () => {});
   return { onClose };
 }
 
@@ -28,59 +31,59 @@ beforeEach(() => {
 
 describe('GoalForm', () => {
   describe('renders correct fields when opened', () => {
-    it('renders the project name input', () => {
-      renderForm({ opened: true });
+    it('renders the project name input', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByPlaceholderText(/e\.g\. Garchomp attacker/i)).toBeInTheDocument();
     });
 
-    it('renders the target species select', () => {
-      renderForm({ opened: true });
+    it('renders the target species select', async () => {
+      await renderForm({ opened: true });
       // SpeciesSelect is a Mantine searchable select — renders a textbox
       expect(screen.getByRole('textbox', { name: /species/i })).toBeInTheDocument();
     });
 
-    it('renders HP stat checkbox', () => {
-      renderForm({ opened: true });
+    it('renders HP stat checkbox', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByLabelText('Target HP')).toBeInTheDocument();
     });
 
-    it('renders Atk stat checkbox', () => {
-      renderForm({ opened: true });
+    it('renders Atk stat checkbox', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByLabelText('Target Atk')).toBeInTheDocument();
     });
 
-    it('renders Def stat checkbox', () => {
-      renderForm({ opened: true });
+    it('renders Def stat checkbox', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByLabelText('Target Def')).toBeInTheDocument();
     });
 
-    it('renders SpA stat checkbox', () => {
-      renderForm({ opened: true });
+    it('renders SpA stat checkbox', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByLabelText('Target SpA')).toBeInTheDocument();
     });
 
-    it('renders SpD stat checkbox', () => {
-      renderForm({ opened: true });
+    it('renders SpD stat checkbox', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByLabelText('Target SpD')).toBeInTheDocument();
     });
 
-    it('renders Spe stat checkbox', () => {
-      renderForm({ opened: true });
+    it('renders Spe stat checkbox', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByLabelText('Target Spe')).toBeInTheDocument();
     });
 
-    it('renders the nature select', () => {
-      renderForm({ opened: true });
+    it('renders the nature select', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByRole('textbox', { name: 'Nature' })).toBeInTheDocument();
     });
 
-    it('renders the ability select', () => {
-      renderForm({ opened: true });
+    it('renders the ability select', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByRole('textbox', { name: 'Ability' })).toBeInTheDocument();
     });
 
-    it('does not render the modal when opened is false', () => {
-      renderForm({ opened: false });
+    it('does not render the modal when opened is false', async () => {
+      await renderForm({ opened: false });
       expect(screen.queryByPlaceholderText(/e\.g\. Garchomp attacker/i)).not.toBeInTheDocument();
     });
   });
@@ -91,7 +94,7 @@ describe('GoalForm', () => {
       // body.textContent in jsdom (the error slot is set but not reflected in DOM text).
       // We assert the behavior: no project added + onClose not called.
       const onClose = vi.fn();
-      renderForm({ opened: true, onClose });
+      await renderForm({ opened: true, onClose });
 
       // Check only 1 stat (HP)
       const hpCheckbox = screen.getByLabelText('Target HP');
@@ -117,7 +120,7 @@ describe('GoalForm', () => {
 
     it('does NOT call onClose (project not created) when fewer than 2 stats selected', async () => {
       const onClose = vi.fn();
-      renderForm({ opened: true, onClose });
+      await renderForm({ opened: true, onClose });
 
       // Select 0 stats — definitely invalid
       const nameInput = screen.getByPlaceholderText(/e\.g\. Garchomp attacker/i);
@@ -137,7 +140,7 @@ describe('GoalForm', () => {
     });
 
     it('shows no stat error when 2 stats are checked', async () => {
-      renderForm({ opened: true });
+      await renderForm({ opened: true });
 
       // Check 2 stats
       fireEvent.click(screen.getByLabelText('Target HP'));
@@ -150,8 +153,8 @@ describe('GoalForm', () => {
       expect(atkCheckbox.checked).toBe(true);
     });
 
-    it('toggles stat checkboxes correctly', () => {
-      renderForm({ opened: true });
+    it('toggles stat checkboxes correctly', async () => {
+      await renderForm({ opened: true });
 
       const hpCheckbox = screen.getByLabelText('Target HP') as HTMLInputElement;
       expect(hpCheckbox.checked).toBe(false);
@@ -165,35 +168,35 @@ describe('GoalForm', () => {
   });
 
   describe('progressive disclosure', () => {
-    it('does not render "Require Hidden Ability" when hiddenAbility feature is off', () => {
-      renderForm({ opened: true });
+    it('does not render "Require Hidden Ability" when hiddenAbility feature is off', async () => {
+      await renderForm({ opened: true });
       expect(screen.queryByLabelText('Require Hidden Ability')).not.toBeInTheDocument();
     });
 
-    it('does not render "Require Shiny" when shiny feature is off', () => {
-      renderForm({ opened: true });
+    it('does not render "Require Shiny" when shiny feature is off', async () => {
+      await renderForm({ opened: true });
       expect(screen.queryByLabelText('Require Shiny')).not.toBeInTheDocument();
     });
 
-    it('renders "Require Hidden Ability" when hiddenAbility feature is on', () => {
+    it('renders "Require Hidden Ability" when hiddenAbility feature is on', async () => {
       useBreedingStore.getState().updateFeatures({ hiddenAbility: true });
-      renderForm({ opened: true });
+      await renderForm({ opened: true });
       expect(screen.getByLabelText('Require Hidden Ability')).toBeInTheDocument();
     });
 
-    it('renders "Require Shiny" when shiny feature is on', () => {
+    it('renders "Require Shiny" when shiny feature is on', async () => {
       useBreedingStore.getState().updateFeatures({ shiny: true });
-      renderForm({ opened: true });
+      await renderForm({ opened: true });
       expect(screen.getByLabelText('Require Shiny')).toBeInTheDocument();
     });
 
-    it('shows all progressive fields after enabling hiddenAbility, shiny, and eggMoves', () => {
+    it('shows all progressive fields after enabling hiddenAbility, shiny, and eggMoves', async () => {
       useBreedingStore.getState().updateFeatures({
         hiddenAbility: true,
         shiny: true,
         eggMoves: true,
       });
-      renderForm({ opened: true });
+      await renderForm({ opened: true });
       expect(screen.getByLabelText('Require Hidden Ability')).toBeInTheDocument();
       expect(screen.getByLabelText('Require Shiny')).toBeInTheDocument();
       // Egg Moves field only shows when a species is selected (species.moves drives the TagsInput)
@@ -207,7 +210,7 @@ describe('GoalForm', () => {
       // Input error slot but not reliably visible in body.textContent in jsdom.
       // We assert the behavioral outcome: store stays empty, onClose not invoked.
       const onClose = vi.fn();
-      renderForm({ opened: true, onClose });
+      await renderForm({ opened: true, onClose });
 
       // Check 2 stats so that's not the blocker
       fireEvent.click(screen.getByLabelText('Target HP'));
@@ -240,17 +243,17 @@ describe('GoalForm', () => {
       expect(project!.goal.targetIVs).toEqual({ hp: 31, atk: 31 });
     });
 
-    it('shows "Create Project" button for new form', () => {
-      renderForm({ opened: true });
+    it('shows "Create Project" button for new form', async () => {
+      await renderForm({ opened: true });
       expect(screen.getByRole('button', { name: /create project/i })).toBeInTheDocument();
     });
 
-    it('shows "Edit Project" title when editingId is set', () => {
+    it('shows "Edit Project" title when editingId is set', async () => {
       const id = useBreedingStore.getState().addProject({
         name: 'My Project',
         goal: { speciesId: 1, targetIVs: { hp: 31, atk: 31 } },
       });
-      renderForm({ opened: true, editingId: id });
+      await renderForm({ opened: true, editingId: id });
       expect(screen.getByText('Edit Project')).toBeInTheDocument();
     });
   });
@@ -262,7 +265,7 @@ describe('GoalForm', () => {
         goal: { speciesId: 1, targetIVs: { hp: 31, atk: 31 } },
       });
 
-      renderForm({ opened: true, editingId: id });
+      await renderForm({ opened: true, editingId: id });
 
       await waitFor(() => {
         const nameInput = screen.getByPlaceholderText(
@@ -278,7 +281,7 @@ describe('GoalForm', () => {
         goal: { speciesId: 1, targetIVs: { hp: 31, spe: 31 } },
       });
 
-      renderForm({ opened: true, editingId: id });
+      await renderForm({ opened: true, editingId: id });
 
       await waitFor(() => {
         const hpCheckbox = screen.getByLabelText('Target HP') as HTMLInputElement;
@@ -290,12 +293,12 @@ describe('GoalForm', () => {
       });
     });
 
-    it('shows "Save Changes" button when editingId is provided', () => {
+    it('shows "Save Changes" button when editingId is provided', async () => {
       const id = useBreedingStore.getState().addProject({
         name: 'Test',
         goal: { speciesId: 1, targetIVs: { hp: 31, atk: 31 } },
       });
-      renderForm({ opened: true, editingId: id });
+      await renderForm({ opened: true, editingId: id });
       expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument();
     });
 
@@ -314,6 +317,8 @@ describe('GoalForm', () => {
           </MantineProvider>
         </MemoryRouter>,
       );
+      // Flush Mantine's post-mount Popover state updates inside act.
+      await act(async () => {});
 
       // Wait for pre-fill
       await waitFor(() => {
@@ -341,9 +346,9 @@ describe('GoalForm', () => {
   });
 
   describe('cancel button', () => {
-    it('calls onClose when Cancel is clicked', () => {
+    it('calls onClose when Cancel is clicked', async () => {
       const onClose = vi.fn();
-      renderForm({ opened: true, onClose });
+      await renderForm({ opened: true, onClose });
       const cancelBtn = screen.getByRole('button', { name: /cancel/i });
       fireEvent.click(cancelBtn);
       expect(onClose).toHaveBeenCalled();
