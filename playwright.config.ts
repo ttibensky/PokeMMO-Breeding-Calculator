@@ -24,6 +24,7 @@ export default defineConfig({
   testDir: './e2e',
   use: {
     baseURL,
+    headless: true,
   },
   projects: [
     {
