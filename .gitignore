@@ -8,3 +8,4 @@ coverage
 .dataset-cache
 .superpowers/
 .claude/worktrees/
+e2e/_*
