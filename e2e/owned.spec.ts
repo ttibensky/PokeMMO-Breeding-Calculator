@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // Helper: open the add-pokemon modal.
 // When the list is empty, use the empty-state button; otherwise use the header button.
@@ -409,5 +409,47 @@ test.describe('Owned Pokémon page', () => {
     await expect(page.getByRole('button', { name: 'Edit Bulbasaur' })).not.toBeVisible();
     await expect(page.getByRole('button', { name: 'Edit Charmander' })).not.toBeVisible();
     await expect(page.getByText('No Pokémon match your filters.')).toBeVisible();
+  });
+});
+
+test.describe('Owned card click opens edit modal', () => {
+  const MON_CLICK = {
+    id: 'mon-click',
+    speciesId: 1,
+    ivs: { hp: 31, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
+    nature: 'Hardy',
+    ability: 'Overgrow',
+    isHiddenAbility: false,
+    gender: 'female',
+    isShiny: false,
+    isAlpha: false,
+    eggMoves: [],
+    createdAt: '2024-01-01T00:00:00.000Z',
+  };
+
+  async function seedOwned(page: Page) {
+    await page.addInitScript((s) => {
+      localStorage.setItem('pokemmo-breeding-store', JSON.stringify({ state: s, version: 0 }));
+    }, { ownedPokemon: [MON_CLICK], projects: [] });
+    await page.goto('/#/owned');
+    await expect(page.getByTestId('owned-filter-bar')).toBeVisible();
+  }
+
+  test('clicking the card body opens the edit modal', async ({ page }) => {
+    await seedOwned(page);
+
+    await page.getByTestId('owned-card-mon-click').click({ position: { x: 12, y: 12 } });
+
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByRole('dialog').getByText('Edit Pokémon')).toBeVisible();
+  });
+
+  test('clicking the delete button opens delete confirmation, not the edit modal', async ({ page }) => {
+    await seedOwned(page);
+
+    await page.getByRole('button', { name: 'Delete Bulbasaur' }).click();
+
+    await expect(page.getByText(/Remove Bulbasaur from your collection/)).toBeVisible();
+    await expect(page.getByText('Edit Pokémon')).toHaveCount(0);
   });
 });
