@@ -290,7 +290,7 @@ function assignItems(
  *   - The distribution is pinned AND pinned value === 31, OR
  *   - Both parents have 31 (distribution collapses to single outcome of 31).
  */
-function computeGuaranteedTargetStats(
+export function computeGuaranteedTargetStats(
   a: OwnedPokemon,
   b: OwnedPokemon,
   items: { a?: ItemKey; b?: ItemKey },
