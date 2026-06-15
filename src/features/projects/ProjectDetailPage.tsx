@@ -24,7 +24,8 @@ import {
 import { useBreedingStore } from '../../store/index';
 import { getSpeciesById } from '../../data/index';
 import { NATURES } from '../../data/natures';
-import { buildPlan, validateManualPair } from '../../engine/index';
+import { validateManualPair } from '../../engine/index';
+import { selectPlanner } from './projectPlannerSelector';
 import { PokemonAvatar } from '../../components/PokemonAvatar';
 import { IVInput } from '../../components/IVInput';
 import {
@@ -482,7 +483,10 @@ export function ProjectDetailPage() {
 
   // Compute plan reactively
   const plan = useMemo(
-    () => (project ? buildPlan(ownedPokemon, project.goal, settings, getSpeciesById) : null),
+    () => {
+      if (!project) return null;
+      return selectPlanner(settings)(ownedPokemon, project.goal, settings, getSpeciesById);
+    },
     [ownedPokemon, project, settings],
   );
 
