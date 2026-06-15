@@ -78,6 +78,20 @@ export function mainCheckoutTarget(projectDir) {
 
 // --- imperative boundary (not unit-tested) ---
 
+// Clean the MAIN checkout: node processes under <root>/node_modules + the main
+// dev/preview ports (3000/3001). Bypasses the isWorktreePath guard on purpose —
+// this is the only path allowed to act on the main root, and only via the
+// node_modules-anchored pattern from mainCheckoutTarget.
+async function cleanupMain(projectDir) {
+  const { path, ports } = mainCheckoutTarget(projectDir);
+  const pids = collectPids(path, ports, shellRun);
+  if (pids.length === 0) return; // quiet: nothing to kill
+  await killPids(pids);
+  console.log(
+    `[cleanup] main: killed ${pids.length} procs (PIDs ${pids.join(', ')})`,
+  );
+}
+
 // Run a shell command, returning stdout or '' (pgrep/lsof exit non-zero when
 // nothing matches — that is expected, not an error).
 function shellRun(cmd) {
@@ -166,6 +180,16 @@ async function main() {
       // no/invalid stdin
     }
     if (payload.worktree_path) await cleanupOne(payload.worktree_path);
+    return;
+  }
+
+  // Kill-all mode: the main checkout + EVERY present worktree (not just orphans).
+  if (args.includes('--all')) {
+    const root = projectRootOf(projectDir);
+    await cleanupMain(root);
+    for (const name of presentWorktreeDirs(root)) {
+      await cleanupOne(join(root, '.claude', 'worktrees', name));
+    }
     return;
   }
 
