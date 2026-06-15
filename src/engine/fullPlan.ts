@@ -1,7 +1,7 @@
 import type { Attribute, FullPlan, PlanNode, PlanGap } from './types';
 import type { OwnedPokemon, BreedingGoal } from '../store/types';
 import type { PokemonSpecies } from '../data/types';
-import { targetAttributes, carriesAttribute, isCompatible } from './planner';
+import { targetAttributes, carriesAttribute, isCompatible, goalMet } from './planner';
 
 export interface SpecNode {
   attributes: Attribute[];
@@ -59,6 +59,19 @@ export function buildFullPlan(
   getSpecies: (id: number) => PokemonSpecies | undefined,
 ): FullPlan {
   const attrs = targetAttributes(goal);
+  const met = pool
+    .filter((m) => goalMet(m, goal, getSpecies))
+    .sort((x, y) => (x.id < y.id ? -1 : 1));
+  if (met.length > 0) {
+    const chosen = met[0];
+    return {
+      goal,
+      done: true,
+      root: { id: '0', attributes: attrs, assignedOwnedId: chosen.id },
+      reservedOwnedIds: [chosen.id],
+      gaps: [],
+    };
+  }
   const spec = buildPyramidSpec(attrs);
   const available = pool.filter((m) => isCompatible(m, goal, getSpecies));
 
