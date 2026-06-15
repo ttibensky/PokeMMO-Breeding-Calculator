@@ -85,7 +85,8 @@ describe('validateRows — ivs', () => {
 describe('validateRows — nature, ability, gender', () => {
   it('matches nature case-insensitively and canonicalizes it', () => {
     const res = rowsOf([['species', 'nature'], ['Bulbasaur', 'modest']]);
-    expect(res.rows[0].ok && (res.rows[0] as any).value.nature).toBe('Modest');
+    const row = res.rows[0];
+    expect(row.ok && row.value.nature).toBe('Modest');
   });
   it('errors on an unknown nature', () => {
     const res = rowsOf([['species', 'nature'], ['Bulbasaur', 'Sneaky']]);
