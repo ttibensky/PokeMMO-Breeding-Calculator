@@ -69,7 +69,13 @@ export interface BreedingProject {
   createdAt: string;
 }
 
-export type PriceKey = ItemKey | 'genderFeeBase' | 'genderFeeMax' | 'abilityPill' | 'ditto';
+export type PriceKey =
+  | ItemKey
+  | 'genderFeeBase'
+  | 'genderFeeMax'
+  | 'abilityPill'
+  | 'ditto'
+  | 'baseCarrier';
 
 export interface MechanicConstants {
   everstoneConsumed: boolean;
@@ -85,6 +91,7 @@ export interface FeatureToggles {
   hiddenAbility: boolean;
   shiny: boolean;
   alpha: boolean;
+  costOptimizer: boolean;
 }
 
 export interface Settings {

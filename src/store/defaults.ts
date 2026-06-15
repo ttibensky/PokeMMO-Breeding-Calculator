@@ -13,12 +13,14 @@ export const DEFAULT_SETTINGS: Settings = {
     genderFeeMax: 25000,
     abilityPill: 35000,
     ditto: 30000,
+    baseCarrier: 10000,
   },
   features: {
     eggMoves: false,
     hiddenAbility: false,
     shiny: false,
     alpha: false,
+    costOptimizer: false,
   },
   mechanics: {
     everstoneConsumed: true,
