@@ -60,6 +60,15 @@ describe('validateRows — species resolution', () => {
     expect(row.errors[0].field).toBe('species');
     expect(row.suggestion).toBe('Bulbasaur');
   });
+  it('errors with "Missing species" when the species cell is blank', () => {
+    const res = rowsOf([['species', 'nature'], ['', 'Modest']]);
+    const row = res.rows[0];
+    expect(row.ok).toBe(false);
+    if (row.ok) return;
+    expect(row.errors[0].field).toBe('species');
+    expect(row.errors[0].message).toBe('Missing species');
+    expect(row.suggestion).toBeUndefined();
+  });
 });
 
 describe('validateRows — ivs', () => {
@@ -132,5 +141,18 @@ describe('validateRows — booleans and egg moves', () => {
   it('errors on an egg move the species cannot learn', () => {
     const res = rowsOf([['species', 'eggMoves'], ['Bulbasaur', 'NotAMove']]);
     expect(res.rows[0].ok).toBe(false);
+  });
+});
+
+describe('validateRows — error reporting', () => {
+  it('accumulates multiple field errors on a single row', () => {
+    const res = rowsOf([['species', 'ivs', 'nature'], ['Bulbasaur', '99/0/0/0/0/0', 'Sneaky']]);
+    const row = res.rows[0];
+    expect(row.ok).toBe(false);
+    if (row.ok) return;
+    const fields = row.errors.map((e) => e.field);
+    expect(fields).toContain('ivs');
+    expect(fields).toContain('nature');
+    expect(row.errors.length).toBeGreaterThanOrEqual(2);
   });
 });
