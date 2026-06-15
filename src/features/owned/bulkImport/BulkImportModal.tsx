@@ -18,13 +18,12 @@ import { formatIVs } from '../ownedHelpers';
 import { PokemonAvatar } from '../../../components/PokemonAvatar';
 import { parseDelimited } from './parseCsv';
 import { validateRows, type ValidateResult } from './validateRows';
+import { buildTemplateCsv, TEMPLATE_HEADER } from './template';
 
 interface BulkImportModalProps {
   opened: boolean;
   onClose: () => void;
 }
-
-const TEMPLATE = 'species,ivs,nature,ability,gender,shiny,alpha,eggMoves,notes';
 
 export function BulkImportModal({ opened, onClose }: BulkImportModalProps) {
   const addOwnedPokemon = useBreedingStore((s) => s.addOwnedPokemon);
@@ -72,12 +71,22 @@ export function BulkImportModal({ opened, onClose }: BulkImportModalProps) {
     handleClose();
   };
 
+  const handleDownloadTemplate = () => {
+    const blob = new Blob([buildTemplateCsv()], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pokemmo-bulk-import-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Modal opened={opened} onClose={handleClose} title="Bulk add Pokémon" size="xl">
       <Stack>
         <Text size="sm" c="dimmed">
           Paste rows (CSV or tab-separated) or upload a file. A header row is required; only{' '}
-          <code>species</code> (or <code>dexId</code>) is mandatory. Columns: {TEMPLATE}.
+          <code>species</code> (or <code>dexId</code>) is mandatory. Columns: {TEMPLATE_HEADER}.
         </Text>
 
         <Textarea
@@ -85,7 +94,7 @@ export function BulkImportModal({ opened, onClose }: BulkImportModalProps) {
           aria-label="Bulk import data"
           autosize
           minRows={6}
-          placeholder={TEMPLATE}
+          placeholder={TEMPLATE_HEADER}
           value={text}
           onChange={(e) => runParse(e.currentTarget.value)}
         />
@@ -98,6 +107,9 @@ export function BulkImportModal({ opened, onClose }: BulkImportModalProps) {
               </Button>
             )}
           </FileButton>
+          <Button variant="default" data-testid="bulk-import-template" onClick={handleDownloadTemplate}>
+            Download template
+          </Button>
         </Group>
 
         {result?.headerError && (
