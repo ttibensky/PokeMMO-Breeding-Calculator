@@ -48,7 +48,7 @@ const STAT_LABEL: Record<StatKey, string> = {
 };
 
 // Inverted map: StatKey → the Power ItemKey that pins it
-const STAT_TO_POWER_ITEM: Record<StatKey, Exclude<ItemKey, 'everstone'>> = {
+export const STAT_TO_POWER_ITEM: Record<StatKey, Exclude<ItemKey, 'everstone'>> = {
   hp:  'powerWeight',
   atk: 'powerBracer',
   def: 'powerBelt',
