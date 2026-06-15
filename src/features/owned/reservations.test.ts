@@ -58,7 +58,7 @@ describe('computeReservations', () => {
 
   it('ignores planning, done, and abandoned projects', () => {
     const mon = makeMon({ ivs: { hp: 31, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 } });
-    const goal = { speciesId: 1, targetIVs: { hp: 31, atk: 31 } };
+    const goal = { speciesId: 1, targetIVs: { hp: 31 as const, atk: 31 as const } };
     for (const status of ['planning', 'done', 'abandoned'] as const) {
       expect(computeReservations([mon], [makeProject({ goal, status })], getSpecies)).toEqual({});
     }

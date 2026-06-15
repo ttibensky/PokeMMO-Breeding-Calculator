@@ -14,6 +14,7 @@ export interface OwnedFilterCriteria {
   eggGroup: string | null;
   shinyOnly: boolean;
   alphaOnly: boolean;
+  reservation: 'all' | 'reserved' | 'free';
   sortKey: OwnedSortKey;
   sortDir: SortDir;
 }
@@ -26,6 +27,7 @@ export const DEFAULT_CRITERIA: OwnedFilterCriteria = {
   eggGroup: null,
   shinyOnly: false,
   alphaOnly: false,
+  reservation: 'all',
   sortKey: 'createdAt',
   sortDir: 'asc',
 };
@@ -65,7 +67,11 @@ export function deriveFilterOptions(list: OwnedPokemon[]): {
   };
 }
 
-export function filterAndSortOwned(list: OwnedPokemon[], c: OwnedFilterCriteria): OwnedPokemon[] {
+export function filterAndSortOwned(
+  list: OwnedPokemon[],
+  c: OwnedFilterCriteria,
+  reservedIds: Set<string> = new Set(),
+): OwnedPokemon[] {
   const searchLower = c.search.toLowerCase();
 
   const filtered = list.filter((mon) => {
@@ -83,6 +89,8 @@ export function filterAndSortOwned(list: OwnedPokemon[], c: OwnedFilterCriteria)
     }
     if (c.shinyOnly && !mon.isShiny) return false;
     if (c.alphaOnly && !mon.isAlpha) return false;
+    if (c.reservation === 'reserved' && !reservedIds.has(mon.id)) return false;
+    if (c.reservation === 'free' && reservedIds.has(mon.id)) return false;
     return true;
   });
 

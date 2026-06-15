@@ -60,6 +60,7 @@ describe('DEFAULT_CRITERIA', () => {
       eggGroup: null,
       shinyOnly: false,
       alphaOnly: false,
+      reservation: 'all',
       sortKey: 'createdAt',
       sortDir: 'asc',
     });
@@ -526,5 +527,44 @@ describe('filterAndSortOwned – empty list', () => {
       shinyOnly: true,
     };
     expect(filterAndSortOwned([], criteria)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// filterAndSortOwned — reservation filter
+// ---------------------------------------------------------------------------
+
+function rmon(id: string): OwnedPokemon {
+  return {
+    id, speciesId: 1, ivs: { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
+    nature: 'Hardy', ability: 'Overgrow', isHiddenAbility: false,
+    gender: 'female', isShiny: false, isAlpha: false, eggMoves: [],
+    createdAt: '2024-01-01T00:00:00.000Z',
+  };
+}
+
+describe('filterAndSortOwned — reservation filter', () => {
+  const reserved = rmon('r');
+  const free = rmon('f');
+  const reservedIds = new Set(['r']);
+
+  it("'all' keeps both", () => {
+    const out = filterAndSortOwned([reserved, free], { ...DEFAULT_CRITERIA, reservation: 'all' }, reservedIds);
+    expect(out.map((m) => m.id).sort()).toEqual(['f', 'r']);
+  });
+
+  it("'reserved' keeps only the reserved mon", () => {
+    const out = filterAndSortOwned([reserved, free], { ...DEFAULT_CRITERIA, reservation: 'reserved' }, reservedIds);
+    expect(out.map((m) => m.id)).toEqual(['r']);
+  });
+
+  it("'free' keeps only the free mon", () => {
+    const out = filterAndSortOwned([reserved, free], { ...DEFAULT_CRITERIA, reservation: 'free' }, reservedIds);
+    expect(out.map((m) => m.id)).toEqual(['f']);
+  });
+
+  it('treats every mon as free when reservedIds is omitted', () => {
+    const out = filterAndSortOwned([reserved, free], { ...DEFAULT_CRITERIA, reservation: 'free' });
+    expect(out.map((m) => m.id).sort()).toEqual(['f', 'r']);
   });
 });
