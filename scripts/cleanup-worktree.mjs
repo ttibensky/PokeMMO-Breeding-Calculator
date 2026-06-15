@@ -66,6 +66,16 @@ export function findOrphanWorktrees(trackedNames, presentDirs) {
   return presentDirs.filter((d) => !tracked.has(d));
 }
 
+// The pgrep path + lsof ports identifying the MAIN checkout's node processes.
+// Anchored to <root>/node_modules so it matches only the main checkout — worktree
+// tools live under .claude/worktrees/<name>/node_modules (path diverges at .claude).
+export function mainCheckoutTarget(projectDir) {
+  return {
+    path: join(projectDir, 'node_modules'),
+    ports: { devPort: 3000, previewPort: 3001 },
+  };
+}
+
 // --- imperative boundary (not unit-tested) ---
 
 // Run a shell command, returning stdout or '' (pgrep/lsof exit non-zero when

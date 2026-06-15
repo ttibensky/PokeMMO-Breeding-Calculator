@@ -6,6 +6,7 @@ import {
   parsePids,
   collectPids,
   findOrphanWorktrees,
+  mainCheckoutTarget,
 } from './cleanup-worktree.mjs';
 
 describe('isWorktreePath', () => {
@@ -86,5 +87,40 @@ describe('findOrphanWorktrees', () => {
   });
   it('returns [] when all dirs are tracked', () => {
     expect(findOrphanWorktrees(['a', 'b'], ['a', 'b'])).toEqual([]);
+  });
+});
+
+describe('mainCheckoutTarget', () => {
+  it('anchors the pgrep path to <root>/node_modules with the main ports', () => {
+    expect(mainCheckoutTarget('/repo')).toEqual({
+      path: '/repo/node_modules',
+      ports: { devPort: 3000, previewPort: 3001 },
+    });
+  });
+});
+
+describe('collectPids — main checkout target', () => {
+  it('pgreps <root>/node_modules and lsofs ports 3000 and 3001', () => {
+    const cmds = [];
+    const run = (cmd) => {
+      cmds.push(cmd);
+      return '';
+    };
+    const { path, ports } = mainCheckoutTarget('/repo');
+    collectPids(path, ports, run);
+    expect(cmds).toContain("pgrep -f '/repo/node_modules'");
+    expect(cmds).toContain('lsof -ti tcp:3000');
+    expect(cmds).toContain('lsof -ti tcp:3001');
+  });
+
+  it('does NOT pgrep the bare repo root (would match worktrees + unrelated tools)', () => {
+    const cmds = [];
+    const run = (cmd) => {
+      cmds.push(cmd);
+      return '';
+    };
+    const { path, ports } = mainCheckoutTarget('/repo');
+    collectPids(path, ports, run);
+    expect(cmds).not.toContain("pgrep -f '/repo'");
   });
 });
