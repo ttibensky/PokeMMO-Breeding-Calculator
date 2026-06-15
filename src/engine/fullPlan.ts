@@ -70,6 +70,7 @@ export function buildFullPlan(
       root: { id: '0', attributes: attrs, assignedOwnedId: chosen.id },
       reservedOwnedIds: [chosen.id],
       gaps: [],
+      optimal: true,
     };
   }
   const spec = buildPyramidSpec(attrs);
@@ -127,5 +128,5 @@ export function buildFullPlan(
   };
   const root = render(spec, '0');
 
-  return { goal, done: false, root, reservedOwnedIds: [...used].sort(), gaps };
+  return { goal, done: false, root, reservedOwnedIds: [...used].sort(), gaps, optimal: true };
 }

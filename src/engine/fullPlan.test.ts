@@ -256,6 +256,14 @@ describe('buildFullPlan — forward-predictor cross-check', () => {
   });
 });
 
+describe('buildFullPlan — optimal flag', () => {
+  it('sets optimal=true on the returned plan', () => {
+    const goal = makeGoal({ targetIVs: { hp: 31, atk: 31 } });
+    const plan = buildFullPlan([], goal, getSpecies);
+    expect(plan.optimal).toBe(true);
+  });
+});
+
 describe('buildFullPlan — determinism', () => {
   it('produces identical trees, reservations, and gaps across repeated calls', () => {
     const goal = makeGoal({ targetIVs: { hp: 31, atk: 31, def: 31 } });

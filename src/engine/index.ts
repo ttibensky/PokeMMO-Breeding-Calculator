@@ -8,6 +8,9 @@ export * from './cost';
 // Planner
 export * from './planner';
 
+// Full plan builder
+export { buildFullPlan } from './fullPlan';
+
 // Compatible pool
 export { getCompatibleSpecies, computeCoverage } from './compatiblePool';
 export type { AttributeCoverage } from './compatiblePool';

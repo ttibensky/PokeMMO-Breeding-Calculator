@@ -77,4 +77,5 @@ export interface FullPlan {
   root: PlanNode;
   reservedOwnedIds: string[];                  // current owned mons this plan consumes
   gaps: PlanGap[];
+  optimal: boolean;                            // true = provably optimal; false = greedy fallback
 }
