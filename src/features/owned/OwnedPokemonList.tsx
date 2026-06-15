@@ -12,6 +12,7 @@ import {
   Modal,
   Select,
   Checkbox,
+  Tooltip,
 } from '@mantine/core';
 import { useBreedingStore } from '../../store/index';
 import { getSpeciesById } from '../../data/index';
@@ -23,6 +24,23 @@ import {
   filterAndSortOwned,
 } from './ownedFilters';
 import type { OwnedFilterCriteria } from './ownedFilters';
+import { useReservations, type ProjectRef } from './reservations';
+
+function ReservationBadge({ refs }: { refs?: ProjectRef[] }) {
+  if (!refs || refs.length === 0) return null;
+  if (refs.length === 1) {
+    return (
+      <Tooltip label={`Reserved by ${refs[0].projectName}`}>
+        <Badge size="xs" variant="light" color="blue">Reserved</Badge>
+      </Tooltip>
+    );
+  }
+  return (
+    <Tooltip label={`Reserved by: ${refs.map((r) => r.projectName).join(', ')}`}>
+      <Badge size="xs" color="red">{`Reserved ·${refs.length} ⚠`}</Badge>
+    </Tooltip>
+  );
+}
 
 const GENDER_SYMBOL: Record<string, string> = {
   male: '♂',
@@ -43,13 +61,17 @@ export function OwnedPokemonList({ onAdd, onEdit, onDuplicate }: OwnedPokemonLis
   const [criteria, setCriteria] = useState<OwnedFilterCriteria>(DEFAULT_CRITERIA);
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
+  const reservations = useReservations();
+  const reservedIds = useMemo(() => new Set(Object.keys(reservations)), [reservations]);
+
   const filterOptions = useMemo(() => deriveFilterOptions(ownedPokemon), [ownedPokemon]);
-  const filtered = filterAndSortOwned(ownedPokemon, criteria);
+  const filtered = filterAndSortOwned(ownedPokemon, criteria, reservedIds);
 
   const confirmingMon = confirmId ? ownedPokemon.find((m) => m.id === confirmId) : null;
   const confirmingName = confirmingMon
     ? (getSpeciesById(confirmingMon.speciesId)?.name ?? `#${confirmingMon.speciesId}`)
     : '';
+  const confirmingRefs: ProjectRef[] | undefined = confirmId ? reservations[confirmId] : undefined;
 
   function handleConfirmDelete() {
     if (confirmId) {
@@ -79,6 +101,12 @@ export function OwnedPokemonList({ onAdd, onEdit, onDuplicate }: OwnedPokemonLis
         title="Remove Pokémon"
         size="sm"
       >
+        {confirmingRefs && confirmingRefs.length > 0 && (
+          <Text size="sm" c="red" mb="md">
+            Reserved by {confirmingRefs.length} in-progress project
+            {confirmingRefs.length > 1 ? 's' : ''}: {confirmingRefs.map((r) => r.projectName).join(', ')}.
+          </Text>
+        )}
         <Text size="sm" mb="md">
           Remove {confirmingName} from your collection? This cannot be undone.
         </Text>
@@ -133,6 +161,22 @@ export function OwnedPokemonList({ onAdd, onEdit, onDuplicate }: OwnedPokemonLis
               label: g.charAt(0).toUpperCase() + g.slice(1),
             }))}
           />
+          <Select
+            aria-label="Filter by reservation"
+            data-testid="filter-reservation"
+            value={criteria.reservation}
+            onChange={(v) =>
+              setCriteria((prev) => ({
+                ...prev,
+                reservation: (v as OwnedFilterCriteria['reservation']) ?? 'all',
+              }))
+            }
+            data={[
+              { value: 'all', label: 'All' },
+              { value: 'reserved', label: 'Reserved' },
+              { value: 'free', label: 'Free to breed' },
+            ]}
+          />
           <Checkbox
             aria-label="Shiny only"
             label="Shiny only"
@@ -175,7 +219,7 @@ export function OwnedPokemonList({ onAdd, onEdit, onDuplicate }: OwnedPokemonLis
             const perfect = countPerfectIVs(mon.ivs);
 
             return (
-              <Card key={mon.id} withBorder padding="sm" radius="md">
+              <Card key={mon.id} data-testid={`owned-card-${mon.id}`} withBorder padding="sm" radius="md">
                 <Group justify="space-between" wrap="nowrap">
                   <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
                     <PokemonAvatar speciesId={mon.speciesId} size="lg" />
@@ -189,6 +233,7 @@ export function OwnedPokemonList({ onAdd, onEdit, onDuplicate }: OwnedPokemonLis
                         {mon.isAlpha && features.alpha && (
                           <Badge size="xs" color="red">Alpha</Badge>
                         )}
+                        <ReservationBadge refs={reservations[mon.id]} />
                       </Group>
                       <Group gap="xs" wrap="wrap">
                         <Text size="xs" c="dimmed">{formatIVs(mon.ivs)}</Text>
