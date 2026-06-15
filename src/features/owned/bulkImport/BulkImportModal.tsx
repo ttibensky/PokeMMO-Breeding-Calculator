@@ -15,6 +15,7 @@ import { notifications } from '@mantine/notifications';
 import { useBreedingStore } from '../../../store/index';
 import { getSpeciesById } from '../../../data/index';
 import { formatIVs } from '../ownedHelpers';
+import { PokemonAvatar } from '../../../components/PokemonAvatar';
 import { parseDelimited } from './parseCsv';
 import { validateRows, type ValidateResult } from './validateRows';
 
@@ -124,7 +125,12 @@ export function BulkImportModal({ opened, onClose }: BulkImportModalProps) {
                 <Table.Tr key={i}>
                   <Table.Td>{i + 1}</Table.Td>
                   <Table.Td>
-                    {row.ok ? getSpeciesById(row.value.speciesId)?.name : row.raw.join(' | ')}
+                    {row.ok ? (
+                      <Group gap="xs" wrap="nowrap">
+                        <PokemonAvatar speciesId={row.value.speciesId} size="sm" />
+                        <Text size="sm">{getSpeciesById(row.value.speciesId)?.name}</Text>
+                      </Group>
+                    ) : row.raw.join(' | ')}
                   </Table.Td>
                   <Table.Td>
                     {row.ok ? (
