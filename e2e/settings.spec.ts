@@ -236,7 +236,33 @@ test.describe('Settings page', () => {
     );
   });
 
-  // ── 5. Reset to defaults restores original values ──────────────────────────
+  // ── 5. Cost Optimizer toggle and base-carrier price ─────────────────────────
+  test('Cost Optimizer toggle and base-carrier price persist and keep the project page working', async ({ page }) => {
+    await page.goto('./');
+    await page.evaluate(() => localStorage.clear());
+    await createBulbasaurProject(page, 'Optimizer E2E');
+
+    await page.goto('./#/settings');
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+
+    // default off
+    await expect(switchInput(page, 'Cost Optimizer')).not.toBeChecked();
+
+    await setNumberInput(page, 'Base Carrier', 20000);
+    await clickSwitch(page, 'Cost Optimizer');
+    await expect(switchInput(page, 'Cost Optimizer')).toBeChecked();
+
+    await page.reload();
+    await expect(switchInput(page, 'Cost Optimizer')).toBeChecked();
+    await expect(page.getByLabel('Base Carrier')).toHaveValue('$20,000');
+
+    // project page must render with the optimizer active
+    await page.goto('./#/projects');
+    await page.getByText('Optimizer E2E').click();
+    await expect(page.getByRole('heading', { name: 'Optimizer E2E' })).toBeVisible();
+  });
+
+  // ── 6. Reset to defaults restores original values ──────────────────────────
   test('Reset to defaults restores prices and feature toggles to their defaults', async ({ page }) => {
     await freshStart(page, './#/settings');
 

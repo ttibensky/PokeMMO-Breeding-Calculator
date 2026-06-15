@@ -33,9 +33,10 @@ const FEE_LABELS: Partial<Record<PriceKey, string>> = {
   genderFeeBase: 'Gender fee (1:1 ratio)',
   genderFeeMax: 'Gender fee (7:1 ratio)',
   abilityPill: 'Ability Pill',
+  baseCarrier: 'Base Carrier (per acquired carrier)',
 };
 
-const FEE_KEYS: PriceKey[] = ['genderFeeBase', 'genderFeeMax', 'abilityPill'];
+const FEE_KEYS: PriceKey[] = ['genderFeeBase', 'genderFeeMax', 'abilityPill', 'baseCarrier'];
 
 function getPriceLabel(key: PriceKey): string {
   if (key in ITEM_LABELS) return ITEM_LABELS[key as keyof typeof ITEM_LABELS];
@@ -245,6 +246,14 @@ export function SettingsPage() {
             checked={settings.features.alpha}
             onChange={(e) =>
               updateFeatures({ alpha: e.currentTarget.checked })
+            }
+          />
+          <Switch
+            label="Cost Optimizer"
+            description="Use the minimum-total-cost planner instead of the greedy next-step heuristic (experimental)."
+            checked={settings.features.costOptimizer}
+            onChange={(e) =>
+              updateFeatures({ costOptimizer: e.currentTarget.checked })
             }
           />
         </Stack>
