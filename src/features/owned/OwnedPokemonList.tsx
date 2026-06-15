@@ -219,7 +219,15 @@ export function OwnedPokemonList({ onAdd, onEdit, onDuplicate }: OwnedPokemonLis
             const perfect = countPerfectIVs(mon.ivs);
 
             return (
-              <Card key={mon.id} data-testid={`owned-card-${mon.id}`} withBorder padding="sm" radius="md">
+              <Card
+                key={mon.id}
+                data-testid={`owned-card-${mon.id}`}
+                withBorder
+                padding="sm"
+                radius="md"
+                onClick={() => onEdit(mon.id)}
+                style={{ cursor: 'pointer' }}
+              >
                 <Group justify="space-between" wrap="nowrap">
                   <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
                     <PokemonAvatar speciesId={mon.speciesId} size="lg" />
@@ -258,14 +266,20 @@ export function OwnedPokemonList({ onAdd, onEdit, onDuplicate }: OwnedPokemonLis
                     <ActionIcon
                       variant="subtle"
                       aria-label={`Edit ${name}`}
-                      onClick={() => onEdit(mon.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(mon.id);
+                      }}
                     >
                       ✏️
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
                       aria-label={`Duplicate ${name}`}
-                      onClick={() => onDuplicate(mon.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDuplicate(mon.id);
+                      }}
                     >
                       ⧉
                     </ActionIcon>
@@ -273,7 +287,10 @@ export function OwnedPokemonList({ onAdd, onEdit, onDuplicate }: OwnedPokemonLis
                       variant="subtle"
                       color="red"
                       aria-label={`Delete ${name}`}
-                      onClick={() => setConfirmId(mon.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmId(mon.id);
+                      }}
                     >
                       🗑️
                     </ActionIcon>
