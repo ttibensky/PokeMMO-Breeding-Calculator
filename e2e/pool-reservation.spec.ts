@@ -24,18 +24,18 @@ const PROJECT_B = {
 };
 
 async function seed(page: Page, state: { ownedPokemon: unknown[]; projects: unknown[] }) {
-  await page.goto('/#/owned');
-  await page.evaluate((s) => {
-    localStorage.setItem('pokemmo-breeding-store', JSON.stringify({ state: s, version: 1 }));
+  await page.addInitScript((s) => {
+    localStorage.setItem('pokemmo-breeding-store', JSON.stringify({ state: s, version: 0 }));
   }, state);
-  await page.reload();
+  await page.goto('/#/owned');
   await expect(page.getByTestId('owned-filter-bar')).toBeVisible();
 }
 
 async function pickReservation(page: Page, label: string) {
   const input = page.getByTestId('owned-filter-bar').getByRole('textbox', { name: 'Filter by reservation' });
   await input.click();
-  const option = page.locator('[role="option"]', { hasText: label }).first();
+  const listboxId = await input.getAttribute('aria-controls');
+  const option = page.locator(`#${listboxId} [role="option"]`, { hasText: label });
   await option.waitFor({ state: 'visible' });
   await option.click();
 }
