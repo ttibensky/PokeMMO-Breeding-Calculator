@@ -37,3 +37,21 @@ test('bulk import blocks commit when a row is invalid', async ({ page }) => {
   await expect(dialog.getByTestId('bulk-import-row-error')).toBeVisible();
   await expect(dialog.getByTestId('bulk-import-commit')).toBeDisabled();
 });
+
+test('downloads a CSV template whose first line is the header', async ({ page }) => {
+  await page.goto('./#/owned');
+  await page.getByTestId('owned-bulk-add').click();
+  const dialog = page.getByRole('dialog');
+
+  const downloadPromise = page.waitForEvent('download');
+  await dialog.getByTestId('bulk-import-template').click();
+  const download = await downloadPromise;
+
+  expect(download.suggestedFilename()).toBe('pokemmo-bulk-import-template.csv');
+
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(chunk as Buffer);
+  const content = Buffer.concat(chunks).toString('utf-8');
+  expect(content.split('\n')[0]).toBe('species,ivs,nature,ability,gender,shiny,alpha,eggMoves,notes');
+});
