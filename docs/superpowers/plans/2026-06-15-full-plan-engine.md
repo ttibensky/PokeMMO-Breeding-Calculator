@@ -396,10 +396,10 @@ Append to `src/engine/fullPlan.ts`. First extend the imports at the top of the f
 import type { Attribute, FullPlan, PlanNode, PlanGap } from './types';
 import type { OwnedPokemon, BreedingGoal } from '../store/types';
 import type { PokemonSpecies } from '../data/types';
-import { targetAttributes, carriesAttribute, isCompatible, goalMet } from './planner';
+import { targetAttributes, carriesAttribute, isCompatible } from './planner';
 ```
 
-Then add the implementation:
+Then add the implementation. Assignment is a **two-pass, largest-node-first** greedy so a mon slots into the *highest* node it can fill (not the first one a depth-first walk reaches), then its subtree is pruned:
 
 ```ts
 function carriesAll(mon: OwnedPokemon, attrs: Attribute[], goal: BreedingGoal): boolean {
@@ -410,38 +410,21 @@ function carriedCount(mon: OwnedPokemon, allAttrs: Attribute[], goal: BreedingGo
   return allAttrs.filter((a) => carriesAttribute(mon, a, goal)).length;
 }
 
-function assign(
-  spec: SpecNode,
-  pool: OwnedPokemon[],
-  used: Set<string>,
-  goal: BreedingGoal,
-  allAttrs: Attribute[],
-  path: string,
-  gaps: PlanGap[],
-): PlanNode {
-  const candidates = pool
-    .filter((m) => !used.has(m.id) && carriesAll(m, spec.attributes, goal))
-    .sort((x, y) => {
-      const cx = carriedCount(x, allAttrs, goal);
-      const cy = carriedCount(y, allAttrs, goal);
-      if (cx !== cy) return cx - cy;        // fewest surplus attributes first
-      return x.id < y.id ? -1 : 1;          // deterministic tie-break
-    });
+interface FlatNode {
+  spec: SpecNode;
+  path: string;
+}
 
-  if (candidates.length > 0) {
-    const chosen = candidates[0];
-    used.add(chosen.id);
-    return { id: path, attributes: spec.attributes, assignedOwnedId: chosen.id };
+function flatten(spec: SpecNode, path: string, out: FlatNode[]): void {
+  out.push({ spec, path });
+  if (spec.children) {
+    flatten(spec.children[0], `${path}.0`, out);
+    flatten(spec.children[1], `${path}.1`, out);
   }
+}
 
-  if (!spec.children) {
-    gaps.push({ nodeId: path, attributes: spec.attributes, speciesId: goal.speciesId });
-    return { id: path, attributes: spec.attributes };
-  }
-
-  const childA = assign(spec.children[0], pool, used, goal, allAttrs, `${path}.0`, gaps);
-  const childB = assign(spec.children[1], pool, used, goal, allAttrs, `${path}.1`, gaps);
-  return { id: path, attributes: spec.attributes, newlyPinned: spec.newlyPinned, children: [childA, childB] };
+function isDescendant(path: string, ancestor: string): boolean {
+  return path.startsWith(`${ancestor}.`);
 }
 
 export function buildFullPlan(
@@ -452,20 +435,62 @@ export function buildFullPlan(
   const attrs = targetAttributes(goal);
   const spec = buildPyramidSpec(attrs);
   const available = pool.filter((m) => isCompatible(m, goal, getSpecies));
+
+  // Pass 1: assign owned mons to the LARGEST node each can fill (slot-high), then prune.
+  const nodes: FlatNode[] = [];
+  flatten(spec, '0', nodes);
+  nodes.sort(
+    (a, b) =>
+      b.spec.attributes.length - a.spec.attributes.length ||
+      (a.path < b.path ? -1 : 1),
+  );
+
+  const assignment = new Map<string, string>(); // node path -> owned id
   const used = new Set<string>();
+  const pruned = new Set<string>();
+
+  for (const { spec: node, path } of nodes) {
+    if (pruned.has(path)) continue;
+    const chosen = available
+      .filter((m) => !used.has(m.id) && carriesAll(m, node.attributes, goal))
+      .sort((x, y) => {
+        const cx = carriedCount(x, attrs, goal);
+        const cy = carriedCount(y, attrs, goal);
+        if (cx !== cy) return cx - cy; // fewest surplus attributes first
+        return x.id < y.id ? -1 : 1;   // deterministic tie-break
+      })[0];
+    if (chosen) {
+      assignment.set(path, chosen.id);
+      used.add(chosen.id);
+      for (const n of nodes) {
+        if (isDescendant(n.path, path)) pruned.add(n.path);
+      }
+    }
+  }
+
+  // Pass 2: render the plan tree; unmatched leaves become gaps.
   const gaps: PlanGap[] = [];
-  const root = assign(spec, available, used, goal, attrs, '0', gaps);
-  return {
-    goal,
-    done: false,
-    root,
-    reservedOwnedIds: [...used].sort(),
-    gaps,
+  const render = (node: SpecNode, path: string): PlanNode => {
+    const assignedOwnedId = assignment.get(path);
+    if (assignedOwnedId) {
+      return { id: path, attributes: node.attributes, assignedOwnedId };
+    }
+    if (!node.children) {
+      gaps.push({ nodeId: path, attributes: node.attributes, speciesId: goal.speciesId });
+      return { id: path, attributes: node.attributes };
+    }
+    return {
+      id: path,
+      attributes: node.attributes,
+      newlyPinned: node.newlyPinned,
+      children: [render(node.children[0], `${path}.0`), render(node.children[1], `${path}.1`)],
+    };
   };
+  const root = render(spec, '0');
+
+  return { goal, done: false, root, reservedOwnedIds: [...used].sort(), gaps };
 }
 ```
-
-Note: `goalMet` is imported now but used in Task 4 (`done` short-circuit). If your linter blocks the unused import between tasks, add the `done` logic from Task 4 in the same pass. Otherwise complete Task 4 before running lint.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -530,16 +555,15 @@ Expected: FAIL — the `done=true` test fails (current code always returns `done
 
 - [ ] **Step 3: Write the implementation**
 
-In `src/engine/fullPlan.ts`, add the `done` short-circuit at the start of `buildFullPlan`, before building the spec:
+First add `goalMet` to the existing import from `./planner` in `src/engine/fullPlan.ts`:
 
 ```ts
-export function buildFullPlan(
-  pool: OwnedPokemon[],
-  goal: BreedingGoal,
-  getSpecies: (id: number) => PokemonSpecies | undefined,
-): FullPlan {
-  const attrs = targetAttributes(goal);
+import { targetAttributes, carriesAttribute, isCompatible, goalMet } from './planner';
+```
 
+Then, in `buildFullPlan`, insert the `done` short-circuit immediately after the `const attrs = targetAttributes(goal);` line and before `const spec = buildPyramidSpec(attrs);`:
+
+```ts
   const met = pool
     .filter((m) => goalMet(m, goal, getSpecies))
     .sort((x, y) => (x.id < y.id ? -1 : 1));
@@ -553,15 +577,9 @@ export function buildFullPlan(
       gaps: [],
     };
   }
-
-  const spec = buildPyramidSpec(attrs);
-  const available = pool.filter((m) => isCompatible(m, goal, getSpecies));
-  const used = new Set<string>();
-  const gaps: PlanGap[] = [];
-  const root = assign(spec, available, used, goal, attrs, '0', gaps);
-  return { goal, done: false, root, reservedOwnedIds: [...used].sort(), gaps };
-}
 ```
+
+Leave the rest of `buildFullPlan` (the two-pass assignment and render from Task 3) unchanged.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
