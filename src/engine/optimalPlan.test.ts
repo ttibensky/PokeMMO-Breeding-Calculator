@@ -207,3 +207,45 @@ describe('buildOptimalPlan', () => {
     expect(plan.root.children![1].id).toBe('0.1');
   });
 });
+
+import { buildFullPlan } from './fullPlan';
+import { OPTIMIZER_NODE_CAP } from './optimalPlan';
+
+describe('buildOptimalPlan — cap & fallback', () => {
+  it('exposes a positive node cap', () => {
+    expect(OPTIMIZER_NODE_CAP).toBeGreaterThan(0);
+  });
+
+  it('falls back to a valid plan with optimal=false when the cap is hit', () => {
+    const g = goal({ hp: 31, atk: 31, def: 31 });
+    const plan = buildOptimalPlan([], g, S, getSpecies, 1); // cap of 1 forces fallback
+    expect(plan.optimal).toBe(false);
+    expect(plan.goal).toEqual(g);
+    expect(plan.root).toBeDefined();
+  });
+});
+
+describe('buildOptimalPlan — regression oracle (optimizer never worse than greedy)', () => {
+  const goals: BreedingGoal[] = [
+    goal({ hp: 31, atk: 31 }),
+    goal({ hp: 31, atk: 31, def: 31 }),
+    goal({ hp: 31, atk: 31, def: 31, spa: 31 }),
+    goal({ hp: 31, atk: 31 }, { nature: 'Adamant' }),
+  ];
+  const pools: OwnedPokemon[][] = [
+    [],
+    [mon({ hp: 31, atk: 31 }, 'p1')],
+    [mon({ hp: 31, atk: 31 }, 'p1'), mon({ def: 31 }, 'p2')],
+    [mon({ hp: 31, atk: 31, def: 31 }, 'p3')],
+  ];
+
+  for (const g of goals) {
+    for (const pool of pools) {
+      it(`opt <= greedy for ${JSON.stringify(g.targetIVs)}${g.nature ?? ''} / pool ${pool.length}`, () => {
+        const opt = buildOptimalPlan(pool, g, S, getSpecies);
+        const greedy = buildFullPlan(pool, g, getSpecies);
+        expect(computePlanCost(opt, S).total).toBeLessThanOrEqual(computePlanCost(greedy, S).total);
+      });
+    }
+  }
+});
