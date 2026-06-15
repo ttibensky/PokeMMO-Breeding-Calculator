@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { Title } from '@mantine/core';
+import { Button, Group, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { OwnedPokemonList } from './OwnedPokemonList';
 import { OwnedPokemonForm } from './OwnedPokemonForm';
+import { BulkImportModal } from './bulkImport/BulkImportModal';
 
 export function OwnedPage() {
   const [formOpened, setFormOpened] = useState(false);
+  const [bulkOpened, setBulkOpened] = useState(false);
   const [editingId, setEditingId] = useState<string | undefined>(undefined);
   const [duplicateFromId, setDuplicateFromId] = useState<string | undefined>(undefined);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -60,16 +62,15 @@ export function OwnedPage() {
 
   return (
     <>
-      <Title order={1} mb="md">Owned Pokémon</Title>
-
+      <Group justify="space-between" mb="md">
+        <Title order={1}>Owned Pokémon</Title>
+        <Button data-testid="owned-bulk-add" variant="default" onClick={() => setBulkOpened(true)}>
+          Bulk add
+        </Button>
+      </Group>
       <OwnedPokemonList onAdd={handleAdd} onEdit={handleEdit} onDuplicate={handleDuplicate} />
-
-      <OwnedPokemonForm
-        opened={formOpened}
-        onClose={handleClose}
-        editingId={editingId}
-        duplicateFromId={duplicateFromId}
-      />
+      <OwnedPokemonForm opened={formOpened} onClose={handleClose} editingId={editingId} duplicateFromId={duplicateFromId} />
+      <BulkImportModal opened={bulkOpened} onClose={() => setBulkOpened(false)} />
     </>
   );
 }
