@@ -2,6 +2,10 @@
 
 A pure-frontend breeding planner for [PokeMMO](https://pokemmo.com/). Record the Pokémon you own, define breeding goals (target IVs, nature, ability, egg moves, shiny/alpha), and the app produces an adaptive step-by-step breeding plan with cost estimates. All data is stored in `localStorage`; there is no backend or account required. The calculator runs locally alongside the game in your browser.
 
+[![Live App](https://img.shields.io/badge/Live_App-Open-brightgreen)](https://ttibensky.github.io/PokeMMO-Breeding-Calculator/)
+
+Use it right away in your browser — no clone or install required.
+
 ---
 
 ## Tech Stack
